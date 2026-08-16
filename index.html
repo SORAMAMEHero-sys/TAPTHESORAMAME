@@ -12,39 +12,38 @@
             margin: 0;
             padding: 20px;
             user-select: none;
-            /* スマホで連打した時に画面が拡大されないようにする */
             touch-action: manipulation;
         }
         h1 {
             color: #333;
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             margin-bottom: 5px;
         }
         .author {
             color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
         }
         .status-box {
             background: white;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
-            max-width: 300px;
-            margin: 0 auto 20px auto;
+            max-width: 320px;
+            margin: 0 auto 15px auto;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .enemy-name {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             color: #d9534f;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         .hp-bar-container {
             width: 100%;
             background-color: #e0e0e0;
             border-radius: 10px;
             overflow: hidden;
-            height: 20px;
+            height: 18px;
             margin-bottom: 5px;
         }
         .hp-bar {
@@ -54,28 +53,28 @@
             transition: width 0.1s;
         }
         #hp-text {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #333;
         }
-        .score-info {
-            font-size: 1.1rem;
-            margin-bottom: 20px;
+        .info-panel {
+            font-size: 1rem;
+            margin-bottom: 15px;
             color: #444;
-            line-height: 1.5;
+            line-height: 1.4;
         }
         #attack-button {
             background-color: #ff5722;
             color: white;
             border: none;
             border-radius: 50%;
-            width: 180px;
-            height: 180px;
-            font-size: 1.5rem;
+            width: 150px;
+            height: 150px;
+            font-size: 1.4rem;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
             transition: transform 0.1s, background-color 0.1s;
-            margin: 0 auto;
+            margin: 0 auto 15px auto;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -84,6 +83,24 @@
         #attack-button:active {
             transform: scale(0.95);
             background-color: #e64a19;
+        }
+        .menu-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .action-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            font-size: 0.9rem;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .action-btn:active {
+            background-color: #0056b3;
         }
         .clear-container {
             margin-top: 50px;
@@ -113,28 +130,32 @@
         <div id="hp-text">HP: 10 / 10</div>
     </div>
 
-    <div class="score-info">
-        倒した敵: <span id="defeat-count">0</span>体<br>
-        残り: <span id="remaining-count">1000</span>体
+    <div class="info-panel">
+        残り敵数: <span id="remaining-count">1000</span>体<br>
+        コイン: <span id="coin-count">0</span>枚 | 攻撃力: <span id="attack-power">1</span>
     </div>
     
     <button id="attack-button">攻撃！</button>
 
+    <div class="menu-buttons">
+        <button class="action-btn" id="upgrade-button">攻撃力強化 (🪙<span id="upgrade-cost">3</span>)</button>
+        <button class="action-btn" id="restart-button" style="background-color: #dc3545;">リスタート</button>
+    </div>
+
     <script>
-        let defeatCount = 0;
-        let enemyMaxHp = 10;
-        let enemyHp = 10;
-        let enemyLevel = 1;
-        const GOAL = 1000; // クリア目標
+        // ゲームデータ（セーブ対象）
+        let gameData = {
+            enemiesRemaining: 1000,
+            coins: 0,
+            attackPower: 1,
+            upgradeCost: 3,
+            enemyMaxHp: 10,
+            enemyHp: 10,
+            enemyLevel: 1,
+            currentEnemyIndex: 0
+        };
 
-        const enemyNameEl = document.getElementById('enemy-name');
-        const hpBarEl = document.getElementById('hp-bar');
-        const hpTextEl = document.getElementById('hp-text');
-        const defeatCountEl = document.getElementById('defeat-count');
-        const remainingCountEl = document.getElementById('remaining-count');
-        const attackButton = document.getElementById('attack-button');
-        const body = document.body;
-
+        const GOAL = 1000;
         const enemies = [
             { name: "スライム", hp: 10 },
             { name: "ゴブリン", hp: 25 },
@@ -143,50 +164,134 @@
             { name: "ドラゴン", hp: 250 }
         ];
 
-        let currentEnemyIndex = 0;
+        // 要素の取得
+        const enemyNameEl = document.getElementById('enemy-name');
+        const hpBarEl = document.getElementById('hp-bar');
+        const hpTextEl = document.getElementById('hp-text');
+        const remainingCountEl = document.getElementById('remaining-count');
+        const coinCountEl = document.getElementById('coin-count');
+        const attackPowerEl = document.getElementById('attack-power');
+        const upgradeCostEl = document.getElementById('upgrade-cost');
+        const attackButton = document.getElementById('attack-button');
+        const upgradeButton = document.getElementById('upgrade-button');
+        const restartButton = document.getElementById('restart-button');
+        const body = document.body;
 
+        // セーブデータの読み込み
+        function loadGame() {
+            const saved = localStorage.getItem('soramame_save');
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    // データを上書き
+                    gameData = { ...gameData, ...parsed };
+                } catch(e) {
+                    console.log("セーブデータの読み込みに失敗しました");
+                }
+            }
+        }
+
+        // セーブデータの保存
+        function saveGame() {
+            localStorage.setItem('soramame_save', JSON.stringify(gameData));
+        }
+
+        // コイン獲得計算ロジック
+        function getCoinReward(remaining) {
+            if (remaining > 950) return 1;
+            if (remaining > 800) return 2;
+            if (remaining > 700) return 3;
+            if (remaining > 600) return 4;
+            if (remaining > 500) return 5;
+            if (remaining > 350) return 7;
+            if (remaining > 100) return 10;
+            return 15;
+        }
+
+        // 画面の更新
         function updateScreen() {
             // クリア判定
-            if (defeatCount >= GOAL) {
+            if (gameData.enemiesRemaining <= 0) {
                 body.innerHTML = `
                     <div class="clear-container">
                         <h1>🎉 クリア！ 🎉</h1>
                         <p>おめでとう！<br>そらまめ軍団は魔物を1000体討伐しました！</p>
-                        <button onclick="location.reload()">もう一度遊ぶ</button>
+                        <button onclick="localStorage.removeItem('soramame_save'); location.reload();">最初から遊ぶ</button>
                     </div>
                 `;
                 return;
             }
 
-            enemyNameEl.textContent = `${enemies[currentEnemyIndex].name} を攻撃！`;
-            let percentage = (enemyHp / enemyMaxHp) * 100;
-            hpBarEl.style.width = percentage + "%";
-            hpTextEl.textContent = `HP: ${enemyHp} / ${enemyMaxHp}`;
+            const currentEnemy = enemies[gameData.currentEnemyIndex];
+            enemyNameEl.textContent = `${currentEnemy.name} を攻撃！`;
             
-            // カウントの更新
-            defeatCountEl.textContent = defeatCount;
-            remainingCountEl.textContent = GOAL - defeatCount;
+            let percentage = (gameData.enemyHp / gameData.enemyMaxHp) * 100;
+            if (percentage < 0) percentage = 0;
+            hpBarEl.style.width = percentage + "%";
+            hpTextEl.textContent = `HP: ${gameData.enemyHp} / ${gameData.enemyMaxHp}`;
+            
+            remainingCountEl.textContent = gameData.enemiesRemaining;
+            coinCountEl.textContent = gameData.coins;
+            attackPowerEl.textContent = gameData.attackPower;
+            upgradeCostEl.textContent = gameData.upgradeCost;
         }
 
+        // 攻撃ボタン
         attackButton.addEventListener('click', () => {
-            enemyHp -= 1;
+            gameData.enemyHp -= gameData.attackPower;
 
-            if (enemyHp <= 0) {
-                defeatCount += 1;
-                currentEnemyIndex = (currentEnemyIndex + 1) % enemies.length;
-                
-                if (currentEnemyIndex === 0) {
-                    enemyLevel += 1;
+            if (gameData.enemyHp <= 0) {
+                // コイン獲得
+                gameData.coins += getCoinReward(gameData.enemiesRemaining);
+                gameData.enemiesRemaining -= 1;
+
+                if (gameData.enemiesRemaining > 0) {
+                    gameData.currentEnemyIndex = (gameData.currentEnemyIndex + 1) % enemies.length;
+                    
+                    if (gameData.currentEnemyIndex === 0) {
+                        gameData.enemyLevel += 1;
+                    }
+                    gameData.enemyMaxHp = Math.floor(enemies[gameData.currentEnemyIndex].hp * (1 + (gameData.enemyLevel - 1) * 0.5));
+                    gameData.enemyHp = gameData.enemyMaxHp;
                 }
-                // レベルが上がると少しずつ敵がタフになる
-                enemyMaxHp = Math.floor(enemies[currentEnemyIndex].hp * (1 + (enemyLevel - 1) * 0.5));
-                enemyHp = enemyMaxHp;
             }
 
+            saveGame(); // 操作のたびに自動セーブ
             updateScreen();
         });
 
-        // 初期化
+        // 強化ボタン
+        upgradeButton.addEventListener('click', () => {
+            if (gameData.coins >= gameData.upgradeCost) {
+                gameData.coins -= gameData.upgradeCost;
+                gameData.attackPower *= 2;        // 攻撃力を2倍に
+                gameData.upgradeCost *= 3;        // コストを3倍に
+                saveGame();
+                updateScreen();
+            } else {
+                alert("コインが足りません！");
+            }
+        });
+
+        // リスタートボタン（残りの敵のみ1000にリセット、他はそのまま）
+        restartButton.addEventListener('click', () => {
+            if (confirm("残りの敵を1000体にリセットしますか？（コインや強化状態は引き継がれます）")) {
+                gameData.enemiesRemaining = 1000;
+                gameData.enemyLevel = 1;
+                gameData.currentEnemyIndex = 0;
+                gameData.enemyMaxHp = enemies[0].hp;
+                gameData.enemyHp = enemies[0].hp;
+                saveGame();
+                updateScreen();
+            }
+        });
+
+        // 起動時処理
+        loadGame();
+        // 万が一HPがおかしくなっている場合の保険
+        if(gameData.enemyHp <= 0 || gameData.enemyHp > gameData.enemyMaxHp) {
+            gameData.enemyHp = gameData.enemyMaxHp;
+        }
         updateScreen();
     </script>
 
