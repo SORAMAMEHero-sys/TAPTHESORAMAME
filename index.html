@@ -86,9 +86,15 @@
         }
         .menu-buttons {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
             gap: 10px;
             margin-bottom: 15px;
+        }
+        .button-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
         }
         .action-btn {
             background-color: #007bff;
@@ -138,8 +144,13 @@
     <button id="attack-button">攻撃！</button>
 
     <div class="menu-buttons">
-        <button class="action-btn" id="upgrade-button">攻撃力強化 (🪙<span id="upgrade-cost">3</span>)</button>
-        <button class="action-btn" id="restart-button" style="background-color: #dc3545;">リスタート</button>
+        <div class="button-row">
+            <button class="action-btn" id="upgrade-button">攻撃力強化 (🪙<span id="upgrade-cost">3</span>)</button>
+            <button class="action-btn" id="restart-button" style="background-color: #dc3545;">リスタート</button>
+        </div>
+        <div class="button-row">
+            <button class="action-btn" id="skip-button" style="background-color: #6c757d;">クールダウン中 (スキップ: 🪙<span id="skip-cost">0</span>)</button>
+        </div>
     </div>
 
     <script>
@@ -151,12 +162,13 @@
             upgradeCost: 3,
             enemyMaxHp: 10,
             enemyHp: 10,
-            defeatCount: 0
+            defeatCount: 0,
+            lastRestartTime: 0 // リスタートした時刻（ミリ秒）
         };
 
         const GOAL = 1000;
-        
-        // 通常の雑魚敵ループ用リスト
+        const COOLDOWN_TIME = 15 * 60 * 1000; // 15分（ミリ秒）
+
         const normalEnemies = [
             { name: "スライム", hp: 10 },
             { name: "ゴブリン", hp: 25 },
@@ -165,10 +177,8 @@
             { name: "ドラゴン", hp: 250 }
         ];
 
-        // 最後に倒したドラゴンの基準HPを保持する変数（ボスのHP計算用）
         let lastDragonHp = 250;
 
-        // 要素の取得
         const enemyNameEl = document.getElementById('enemy-name');
         const hpBarEl = document.getElementById('hp-bar');
         const hpTextEl = document.getElementById('hp-text');
@@ -179,11 +189,12 @@
         const attackButton = document.getElementById('attack-button');
         const upgradeButton = document.getElementById('upgrade-button');
         const restartButton = document.getElementById('restart-button');
+        const skipButton = document.getElementById('skip-button');
+        const skipCostEl = document.getElementById('skip-cost');
         const body = document.body;
 
-        // セーブデータの読み込み
         function loadGame() {
-            const saved = localStorage.getItem('soramame_save_v2');
+            const saved = localStorage.getItem('soramame_save_v3');
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
@@ -194,12 +205,10 @@
             }
         }
 
-        // セーブデータの保存
         function saveGame() {
-            localStorage.setItem('soramame_save_v2', JSON.stringify(gameData));
+            localStorage.setItem('soramame_save_v3', JSON.stringify(gameData));
         }
 
-        // コイン獲得計算ロジック
         function getCoinReward(remaining) {
             if (remaining > 950) return 1;
             if (remaining > 800) return 2;
@@ -211,9 +220,7 @@
             return 15;
         }
 
-        // 現在の残り敵数に応じた敵情報を取得する関数
         function getCurrentEnemyInfo(remaining) {
-            // ボスの判定
             if (remaining === 950) return { name: "【ボス】ダウナー", hp: lastDragonHp * 25 };
             if (remaining === 900) return { name: "【ボス】ダンビル", hp: lastDragonHp * 25 };
             if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: lastDragonHp * 25 };
@@ -222,35 +229,28 @@
             if (remaining === 350) return { name: "【ボス】ダウナー EX", hp: lastDragonHp * 70 };
             if (remaining === 100) return { name: "【ボス】終焉の支配者", hp: lastDragonHp * 100 };
             if (remaining === 50)  return { name: "【ボス】ラストビュオス", hp: lastDragonHp * 150 };
-            if (remaining === 1)   {
-                // ラストの「そらまめ」は超強力！
-                return { name: "👑【ラスボス】そらまめ", hp: lastDragonHp * 250 };
-            }
+            if (remaining === 1)   return { name: "👑【ラスボス】そらまめ", hp: lastDragonHp * 250 };
 
-            // 通常の雑魚敵（ローテーション＋5体ごとに1.5倍）
             const index = gameData.defeatCount % normalEnemies.length;
             const baseEnemy = normalEnemies[index];
             
-            // ドラゴン（インデックス4）が出現・撃破されたら基準HPを更新
             if (index === 4) {
                 lastDragonHp = baseEnemy.hp;
             }
 
-            // 5体倒すごとに1.5倍のグループ計算
             const groupLevel = Math.floor(gameData.defeatCount / 5);
             const scaledHp = Math.floor(baseEnemy.hp * Math.pow(1.5, groupLevel));
 
             return { name: baseEnemy.name, hp: scaledHp };
         }
 
-        // 画面の更新
         function updateScreen() {
             if (gameData.enemiesRemaining <= 0) {
                 body.innerHTML = `
                     <div class="clear-container">
                         <h1>🎉 クリア！ 🎉</h1>
                         <p>おめでとう！<br>そらまめ軍団はすべての魔物を討伐し、平和を取り戻しました！</p>
-                        <button onclick="localStorage.removeItem('soramame_save_v2'); location.reload();">最初から遊ぶ</button>
+                        <button onclick="localStorage.removeItem('soramame_save_v3'); location.reload();">最初から遊ぶ</button>
                     </div>
                 `;
                 return;
@@ -259,7 +259,6 @@
             const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
             enemyNameEl.textContent = `${currentEnemy.name} を攻撃！`;
 
-            // 初回やリセット時で敵のHPが未設定なら現在の敵のHPを代入
             if (!gameData.enemyMaxHp || gameData.enemyMaxHp <= 0) {
                 gameData.enemyMaxHp = currentEnemy.hp;
                 gameData.enemyHp = currentEnemy.hp;
@@ -274,11 +273,31 @@
             coinCountEl.textContent = gameData.coins;
             attackPowerEl.textContent = gameData.attackPower;
             upgradeCostEl.textContent = gameData.upgradeCost;
+
+            // クールダウンとスキップコストの計算
+            const now = Date.now();
+            const elapsed = now - gameData.lastRestartTime;
+            const skipCost = Math.round(gameData.attackPower * 1.5);
+            skipCostEl.textContent = skipCost;
+
+            if (elapsed < COOLDOWN_TIME) {
+                const remainingTimeMs = COOLDOWN_TIME - elapsed;
+                const remainingMinutes = Math.ceil(remainingTimeMs / (60 * 1000));
+                restartButton.disabled = true;
+                restartButton.style.opacity = "0.6";
+                restartButton.textContent = `リスタート (${remainingMinutes}分後)`;
+                
+                skipButton.style.display = "inline-block";
+            } else {
+                restartButton.disabled = false;
+                restartButton.style.opacity = "1";
+                restartButton.textContent = "リスタート";
+                
+                skipButton.style.display = "none"; // クールダウン中でなければ非表示
+            }
         }
 
-        // 攻撃ボタン
         attackButton.addEventListener('click', () => {
-            // 初回保険
             if (!gameData.enemyHp) {
                 const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
                 gameData.enemyMaxHp = currentEnemy.hp;
@@ -288,24 +307,21 @@
             gameData.enemyHp -= gameData.attackPower;
 
             if (gameData.enemyHp <= 0) {
-                // 敵を撃破！
                 gameData.coins += getCoinReward(gameData.enemiesRemaining);
                 gameData.enemiesRemaining -= 1;
                 gameData.defeatCount += 1;
 
                 if (gameData.enemiesRemaining > 0) {
-                    // 次の敵のHPをセット
                     const nextEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
                     gameData.enemyMaxHp = nextEnemy.hp;
                     gameData.enemyHp = nextEnemy.hp;
                 }
             }
 
-            saveKey = saveGame();
+            saveGame();
             updateScreen();
         });
 
-        // 強化ボタン
         upgradeButton.addEventListener('click', () => {
             if (gameData.coins >= gameData.upgradeCost) {
                 gameData.coins -= gameData.upgradeCost;
@@ -318,27 +334,52 @@
             }
         });
 
-        // リスタートボタン（残りの敵のみ1000にリセット、コイン・強化は引き継ぎ）
+        // リスタートボタン
         restartButton.addEventListener('click', () => {
-            if (confirm("残りの敵を1000体にリセットしますか？（コインや攻撃力はそのまま引き継がれます）")) {
+            const now = Date.now();
+            if (now - gameData.lastRestartTime < COOLDOWN_TIME) {
+                alert("まだクールダウン中です！");
+                return;
+            }
+
+            if (confirm("残りの敵を1000体にリセットしますか？（コインや攻撃力はそのまま引き継がれます。次回から15分間のクールダウンが発生します）")) {
                 gameData.enemiesRemaining = 1000;
                 gameData.defeatCount = 0;
                 const firstEnemy = getCurrentEnemyInfo(1000);
                 gameData.enemyMaxHp = firstEnemy.hp;
                 gameData.enemyHp = firstEnemy.hp;
+                gameData.lastRestartTime = Date.now(); // 現在時刻を記録
                 saveGame();
                 updateScreen();
             }
         });
 
-        // 起動時処理
+        // クールダウンスキップボタン
+        skipButton.addEventListener('click', () => {
+            const skipCost = Math.round(gameData.attackPower * 1.5);
+            if (gameData.coins >= skipCost) {
+                if (confirm(`🪙${skipCost}枚を支払ってクールダウンをスキップしますか？`)) {
+                    gameData.coins -= skipCost;
+                    gameData.lastRestartTime = 0; // タイマーをリセットして即座にリスタート可能にする
+                    saveGame();
+                    updateScreen();
+                    alert("クールダウンをスキップしました！");
+                }
+            } else {
+                alert("コインが足りません！");
+            }
+        });
+
         loadGame();
-        // 起動時のHPチェック
         const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
         if (!gameData.enemyHp || gameData.enemyHp > currentEnemy.hp) {
             gameData.enemyMaxHp = currentEnemy.hp;
             gameData.enemyHp = currentEnemy.hp;
         }
+        
+        // 1秒ごとに画面を更新してクールダウンの残り時間をリアルタイム反映
+        setInterval(updateScreen, 1000);
+
         updateScreen();
     </script>
 
