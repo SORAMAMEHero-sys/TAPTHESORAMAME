@@ -225,6 +225,9 @@
             <button class="action-btn" id="gacha-10-btn" style="background-color: #fd7e14;">ガチャ10連 (💎100)</button>
         </div>
         <div class="button-row">
+            <button class="action-btn" id="exchange-btn" style="background-color: #20c997;">ルビー交換 (🪙<span id="exchange-cost">6</span>)</button>
+        </div>
+        <div class="button-row">
             <button class="action-btn" id="skip-button" style="background-color: #6c757d; display: none;">CDスキップ (🪙<span id="skip-cost">0</span>)</button>
         </div>
     </div>
@@ -298,8 +301,10 @@
         const rubyCountEl = document.getElementById('ruby-count');
         const totalAttackPowerEl = document.getElementById('total-attack-power');
         const upgradeCostEl = document.getElementById('upgrade-cost');
+        const exchangeCostEl = document.getElementById('exchange-cost');
         const attackButton = document.getElementById('attack-button');
         const upgradeButton = document.getElementById('upgrade-button');
+        const exchangeBtn = document.getElementById('exchange-btn');
         const restartButton = document.getElementById('restart-button');
         const skipButton = document.getElementById('skip-button');
         const skipCostEl = document.getElementById('skip-cost');
@@ -310,7 +315,6 @@
         const body = document.body;
 
         function loadGame() {
-            // 古いセーブデータ（v4以前）があれば、まずそっちを読み込んで引き継ぐ！
             const savedV4 = localStorage.getItem('soramame_save_v4');
             const savedV5 = localStorage.getItem('soramame_save_v5');
             
@@ -428,6 +432,10 @@
             rubyCountEl.textContent = gameData.rubies;
             totalAttackPowerEl.textContent = calculateTotalAttack();
             upgradeCostEl.textContent = gameData.upgradeCost;
+
+            // 交換コストは「攻撃力 × 6」
+            const exchangeCost = gameData.attackPower * 6;
+            exchangeCostEl.textContent = exchangeCost;
 
             if (Date.now() < gameData.buffEndTime) {
                 const leftSec = Math.ceil((gameData.buffEndTime - Date.now()) / 1000);
@@ -607,10 +615,14 @@
 
             if (gameData.enemyHp <= 0) {
                 gameData.coins += getCoinReward(gameData.enemiesRemaining);
+                
+                const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
                 gameData.enemiesRemaining -= 1;
                 gameData.defeatCount += 1;
 
-                if (Math.random() < 0.07) {
+                // ドラゴン撃破時はルビー確定（1個獲得）、通常は9%の確率
+                const isDragonDefeated = currentEnemy.name.includes("ドラゴン");
+                if (isDragonDefeated || Math.random() < 0.09) {
                     gameData.rubies += 1;
                 }
 
@@ -636,6 +648,22 @@
                 gameData.upgradeCost *= 3;
                 saveGame();
                 updateScreen();
+            } else {
+                alert("コインが足りません！");
+            }
+        });
+
+        // 「攻撃力 × 6」のコインでルビー1個に交換
+        exchangeBtn.addEventListener('click', () => {
+            const exchangeCost = gameData.attackPower * 6;
+            if (gameData.coins >= exchangeCost) {
+                if (confirm(`🪙コイン${exchangeCost}枚を消費して、💎ルビー1個と交換しますか？`)) {
+                    gameData.coins -= exchangeCost;
+                    gameData.rubies += 1;
+                    saveGame();
+                    updateScreen();
+                    alert("ルビーを1個手に入れた！");
+                }
             } else {
                 alert("コインが足りません！");
             }
