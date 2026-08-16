@@ -12,6 +12,8 @@
             margin: 0;
             padding: 20px;
             user-select: none;
+            /* ここでダブルタップ拡大を無効化しています */
+            touch-action: manipulation;
         }
         h1 {
             color: #333;
@@ -76,6 +78,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            /* ボタン側にも念のため指定 */
+            touch-action: manipulation;
         }
         #attack-button:active {
             transform: scale(0.95);
@@ -101,7 +105,6 @@
     <button id="attack-button">攻撃！</button>
 
     <script>
-        // ゲームの状態管理
         let defeatCount = 0;
         let enemyMaxHp = 10;
         let enemyHp = 10;
@@ -113,7 +116,6 @@
         const defeatCountEl = document.getElementById('defeat-count');
         const attackButton = document.getElementById('attack-button');
 
-        // 敵の種類リスト
         const enemies = [
             { name: "スライム", hp: 10 },
             { name: "ゴブリン", hp: 25 },
@@ -132,18 +134,13 @@
             defeatCountEl.textContent = defeatCount;
         }
 
-        // 攻撃ボタンを押したとき
         attackButton.addEventListener('click', () => {
-            enemyHp -= 1; // 1回のタップで1ダメージ
+            enemyHp -= 1;
 
             if (enemyHp <= 0) {
-                // 敵を倒した！
                 defeatCount += 1;
-                
-                // 次の敵へ（ループするか、だんだん強くする）
                 currentEnemyIndex = (currentEnemyIndex + 1) % enemies.length;
                 
-                // 倒すたびに敵のHPを少しずつ増やす演出
                 if (currentEnemyIndex === 0) {
                     enemyLevel += 1;
                 }
@@ -154,7 +151,6 @@
             updateScreen();
         });
 
-        // 初期化
         updateScreen();
     </script>
 
