@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>進め！そらまめ軍団</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            user-select: none;
+        }
+        h1 {
+            color: #333;
+            font-size: 1.6rem;
+            margin-bottom: 5px;
+        }
+        .author {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        .status-box {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 300px;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .enemy-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #d9534f;
+            margin-bottom: 10px;
+        }
+        .hp-bar-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+            margin-bottom: 5px;
+        }
+        .hp-bar {
+            width: 100%;
+            height: 100%;
+            background-color: #5cb85c;
+            transition: width 0.1s;
+        }
+        #hp-text {
+            font-size: 0.9rem;
+            color: #333;
+        }
+        .score-info {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: #444;
+        }
+        #attack-button {
+            background-color: #ff5722;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 180px;
+            height: 180px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: transform 0.1s, background-color 0.1s;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #attack-button:active {
+            transform: scale(0.95);
+            background-color: #e64a19;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>進め！そらまめ軍団</h1>
+    <div class="author">作者: そらまめゲームズ & Gemini</div>
+    
+    <div class="status-box">
+        <div id="enemy-name" class="enemy-name">スライムが現れた！</div>
+        <div class="hp-bar-container">
+            <div id="hp-bar" class="hp-bar"></div>
+        </div>
+        <div id="hp-text">HP: 10 / 10</div>
+    </div>
+
+    <div class="score-info">倒した敵の数: <span id="defeat-count">0</span>体</div>
+    
+    <button id="attack-button">攻撃！</button>
+
+    <script>
+        // ゲームの状態管理
+        let defeatCount = 0;
+        let enemyMaxHp = 10;
+        let enemyHp = 10;
+        let enemyLevel = 1;
+
+        const enemyNameEl = document.getElementById('enemy-name');
+        const hpBarEl = document.getElementById('hp-bar');
+        const hpTextEl = document.getElementById('hp-text');
+        const defeatCountEl = document.getElementById('defeat-count');
+        const attackButton = document.getElementById('attack-button');
+
+        // 敵の種類リスト
+        const enemies = [
+            { name: "スライム", hp: 10 },
+            { name: "ゴブリン", hp: 25 },
+            { name: "オオカミ", hp: 50 },
+            { name: "魔物のおおきい鳥", hp: 100 },
+            { name: "ドラゴン", hp: 250 }
+        ];
+
+        let currentEnemyIndex = 0;
+
+        function updateScreen() {
+            enemyNameEl.textContent = `${enemies[currentEnemyIndex].name} を攻撃！`;
+            let percentage = (enemyHp / enemyMaxHp) * 100;
+            hpBarEl.style.width = percentage + "%";
+            hpTextEl.textContent = `HP: ${enemyHp} / ${enemyMaxHp}`;
+            defeatCountEl.textContent = defeatCount;
+        }
+
+        // 攻撃ボタンを押したとき
+        attackButton.addEventListener('click', () => {
+            enemyHp -= 1; // 1回のタップで1ダメージ
+
+            if (enemyHp <= 0) {
+                // 敵を倒した！
+                defeatCount += 1;
+                
+                // 次の敵へ（ループするか、だんだん強くする）
+                currentEnemyIndex = (currentEnemyIndex + 1) % enemies.length;
+                
+                // 倒すたびに敵のHPを少しずつ増やす演出
+                if (currentEnemyIndex === 0) {
+                    enemyLevel += 1;
+                }
+                enemyMaxHp = enemies[currentEnemyIndex].hp * enemyLevel;
+                enemyHp = enemyMaxHp;
+            }
+
+            updateScreen();
+        });
+
+        // 初期化
+        updateScreen();
+    </script>
+
+</body>
+</html>
