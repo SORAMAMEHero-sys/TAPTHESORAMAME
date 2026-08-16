@@ -113,7 +113,6 @@
         .action-btn:active {
             background-color: #0056b3;
         }
-        /* 装備 & 所持品セクション */
         .section-box {
             background: white;
             padding: 10px;
@@ -230,7 +229,6 @@
         </div>
     </div>
 
-    <!-- 装備欄エリア -->
     <div class="section-box">
         <h3>⚔️ 装備スロット (最大3つ)</h3>
         <div class="slot-container">
@@ -253,7 +251,6 @@
         <div style="font-size:0.75rem; color:#666; text-align:center;" id="active-buff-text"></div>
     </div>
 
-    <!-- 所持品インベントリ -->
     <div class="section-box">
         <h3>🎒 所持アイテム一覧</h3>
         <div class="inventory-list" id="inventory-list">
@@ -273,10 +270,10 @@
             defeatCount: 0,
             maxDefeatCount: 0,
             lastRestartTime: 0,
-            inventory: [], // 所持アイテムの配列 { id, name, type }
-            equipped: [null, null, null], // [0]:剣枠, [1]:アイテム枠1, [2]:アイテム枠2
-            buffEndTime: 0,  // ドリンクの有効期限（ミリ秒）
-            buffMultiplier: 1 // ドリンクの倍率
+            inventory: [],
+            equipped: [null, null, null],
+            buffEndTime: 0,
+            buffMultiplier: 1
         };
 
         const GOAL = 1000;
@@ -313,10 +310,14 @@
         const body = document.body;
 
         function loadGame() {
-            const saved = localStorage.getItem('soramame_save_v5');
-            if (saved) {
+            // 古いセーブデータ（v4以前）があれば、まずそっちを読み込んで引き継ぐ！
+            const savedV4 = localStorage.getItem('soramame_save_v4');
+            const savedV5 = localStorage.getItem('soramame_save_v5');
+            
+            let targetSave = savedV5 || savedV4;
+            if (targetSave) {
                 try {
-                    const parsed = JSON.parse(saved);
+                    const parsed = JSON.parse(targetSave);
                     gameData = { ...gameData, ...parsed };
                 } catch(e) {
                     console.log("セーブデータの読み込みに失敗しました");
@@ -359,26 +360,21 @@
 
             const groupLevel = Math.floor(gameData.defeatCount / 5);
             const scaledHp = Math.floor(baseEnemy.hp * Math.pow(1.5, groupLevel));
-
-            // ドラゴン判定 (名前に「ドラゴン」が含まれるかインデックス4)
             const isDragon = (baseEnemy.name.includes("ドラゴン"));
 
             return { name: baseEnemy.name, hp: scaledHp, isDragon: isDragon };
         }
 
-        // 実際の総攻撃力を計算する関数
         function calculateTotalAttack() {
             let base = gameData.attackPower;
             let multiplier = 1;
             let isDragonTarget = false;
 
-            // 現在の敵がドラゴンかどうかチェック
             const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
-            if (currentEnemy.name.includes("ドラゴン") || currentEnemy.name.includes("ドラゴン")) {
+            if (currentEnemy.name.includes("ドラゴン")) {
                 isDragonTarget = true;
             }
 
-            // 装備品の効果計算
             gameData.equipped.forEach((item, index) => {
                 if (!item) return;
                 if (item.name === "普通の剣") multiplier *= 1.5;
@@ -386,17 +382,16 @@
                 if (item.name === "上質な剣") multiplier *= 3;
                 if (item.name === "宝石の剣") {
                     multiplier *= 5;
-                    if (isDragonTarget) multiplier *= 2; // ドラゴンに対して2倍
+                    if (isDragonTarget) multiplier *= 2;
                 }
                 if (item.name === "健康飲料") multiplier *= 1.5;
                 if (item.name === "エナドリ") multiplier *= 3;
             });
 
-            // ドリンクバフの期限チェック＆適用
             if (Date.now() < gameData.buffEndTime) {
                 multiplier *= gameData.buffMultiplier;
             } else if (gameData.buffEndTime > 0) {
-                gameData.buffEndTime = 0; // 効果切れ
+                gameData.buffEndTime = 0;
             }
 
             return Math.floor(base * multiplier);
@@ -408,7 +403,7 @@
                     <div class="clear-container">
                         <h1>🎉 クリア！ 🎉</h1>
                         <p>おめでとう！<br>そらまめ軍団はすべての魔物を討伐し、平和を取り戻しました！</p>
-                        <button onclick="localStorage.removeItem('soramame_save_v5'); location.reload();">最初から遊ぶ</button>
+                        <button onclick="localStorage.removeItem('soramame_save_v5'); localStorage.removeItem('soramame_save_v4'); location.reload();">最初から遊ぶ</button>
                     </div>
                 `;
                 return;
@@ -434,12 +429,11 @@
             totalAttackPowerEl.textContent = calculateTotalAttack();
             upgradeCostEl.textContent = gameData.upgradeCost;
 
-            // バフ残り時間の表示
             if (Date.now() < gameData.buffEndTime) {
                 const leftSec = Math.ceil((gameData.buffEndTime - Date.now()) / 1000);
                 const min = Math.floor(leftSec / 60);
                 const sec = leftSec % 60;
-                activeBuffTextEl.textContent = `⚡ ドリンク効果発動中残り: ${min}分${sec}秒`;
+                activeBuffTextEl.textContent = `⚡ 効果発動中残り: ${min}分${sec}秒`;
             } else {
                 activeBuffTextEl.textContent = "";
             }
@@ -447,7 +441,6 @@
             updateEquipmentUI();
             updateInventoryUI();
 
-            // リスタートボタンの条件判定
             const now = Date.now();
             const elapsed = now - gameData.lastRestartTime;
             const skipCost = Math.round(gameData.attackPower * 1.5);
@@ -482,7 +475,6 @@
             }
         }
 
-        // 装備画面のUI更新
         function updateEquipmentUI() {
             for (let i = 0; i < 3; i++) {
                 const nameEl = document.getElementById(`slot-${i}-name`);
@@ -502,7 +494,6 @@
             }
         }
 
-        // インベントリのUI更新
         function updateInventoryUI() {
             if (gameData.inventory.length === 0) {
                 inventoryListEl.innerHTML = `<div style="text-align:center; color:#888; font-size:0.8rem; padding:5px;">まだアイテムはありません</div>`;
@@ -521,7 +512,6 @@
             inventoryListEl.innerHTML = html;
         }
 
-        // アイテムを装備する
         window.equipItem = function(invIndex) {
             const item = gameData.inventory[invIndex];
             if (!item) return;
@@ -529,19 +519,16 @@
             const isSword = item.type === "sword";
 
             if (isSword) {
-                // 剣枠（スロット0）へ。もし既に装備していたら所持品に戻す
                 if (gameData.equipped[0]) {
                     gameData.inventory.push(gameData.equipped[0]);
                 }
                 gameData.equipped[0] = item;
                 gameData.inventory.splice(invIndex, 1);
             } else {
-                // アイテム枠（スロット1 or 2）へ空いてるところを探す
                 let targetSlot = -1;
                 if (!gameData.equipped[1]) targetSlot = 1;
                 else if (!gameData.equipped[2]) targetSlot = 2;
                 else {
-                    // 両方埋まってたらスロット1と入れ替え
                     targetSlot = 1;
                     gameData.inventory.push(gameData.equipped[1]);
                 }
@@ -554,7 +541,6 @@
             updateScreen();
         };
 
-        // 装備を外す
         window.unequipItem = function(slotIndex) {
             const item = gameData.equipped[slotIndex];
             if (!item) return;
@@ -566,7 +552,6 @@
             updateScreen();
         };
 
-        // ガチャ実行関数
         function rollGacha(count) {
             const cost = count * 10;
             if (gameData.rubies < cost) {
@@ -589,15 +574,15 @@
 
                 if (rand < 30) {
                     obtained = { name: "普通の剣", type: "sword" };
-                } else if (rand < 50) { // 30 + 20
+                } else if (rand < 50) {
                     obtained = { name: "少しいい剣", type: "sword" };
-                } else if (rand < 60) { // 50 + 10
+                } else if (rand < 60) {
                     obtained = { name: "上質な剣", type: "sword" };
-                } else if (rand < 65) { // 60 + 5
+                } else if (rand < 65) {
                     obtained = { name: "宝石の剣", type: "sword" };
-                } else if (rand < 90) { // 65 + 25
+                } else if (rand < 90) {
                     obtained = { name: "健康飲料", type: "item" };
-                } else { // 残り10%
+                } else {
                     obtained = { name: "エナドリ", type: "item" };
                 }
 
@@ -610,7 +595,6 @@
             alert("ガチャ結果:\n" + results.join("\n"));
         }
 
-        // 攻撃ボタン
         attackButton.addEventListener('click', () => {
             if (!gameData.enemyHp) {
                 const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
@@ -618,7 +602,6 @@
                 gameData.enemyHp = currentEnemy.hp;
             }
 
-            // 実際の総攻撃力でダメージ
             const currentAttack = calculateTotalAttack();
             gameData.enemyHp -= currentAttack;
 
@@ -627,7 +610,6 @@
                 gameData.enemiesRemaining -= 1;
                 gameData.defeatCount += 1;
 
-                // 7%の確率でルビー獲得
                 if (Math.random() < 0.07) {
                     gameData.rubies += 1;
                 }
@@ -647,7 +629,6 @@
             updateScreen();
         });
 
-        // 強化ボタン
         upgradeButton.addEventListener('click', () => {
             if (gameData.coins >= gameData.upgradeCost) {
                 gameData.coins -= gameData.upgradeCost;
@@ -660,7 +641,6 @@
             }
         });
 
-        // リスタートボタン
         restartButton.addEventListener('click', () => {
             if (gameData.defeatCount < gameData.maxDefeatCount) {
                 alert("歴代の最高到達点まで進まないとリスタートできません！");
@@ -673,7 +653,7 @@
                 return;
             }
 
-            if (confirm("残りの敵を1000体にリセットしますか？（コインやガチャアイテムはそのまま引き継がれます）")) {
+            if (confirm("残りの敵を1000体にリセットしますか？")) {
                 gameData.enemiesRemaining = 1000;
                 gameData.defeatCount = 0;
                 const firstEnemy = getCurrentEnemyInfo(1000);
@@ -685,7 +665,6 @@
             }
         });
 
-        // クールダウンスキップボタン
         skipButton.addEventListener('click', () => {
             const skipCost = Math.round(gameData.attackPower * 1.5);
             if (gameData.coins >= skipCost) {
@@ -711,9 +690,7 @@
             gameData.enemyHp = currentEnemy.hp;
         }
         
-        // 1秒ごとに画面を更新（タイマーやドリンクの効果切れを監視）
         setInterval(updateScreen, 1000);
-
         updateScreen();
     </script>
 
