@@ -226,6 +226,7 @@
         </div>
         <div class="button-row">
             <button class="action-btn" id="exchange-btn" style="background-color: #20c997;">ルビー交換 (🪙<span id="exchange-cost">6</span>)</button>
+            <button class="action-btn" id="rate-btn" style="background-color: #17a2b8;">確率一覧</button>
         </div>
         <div class="button-row">
             <button class="action-btn" id="skip-button" style="background-color: #6c757d; display: none;">CDスキップ (🪙<span id="skip-cost">0</span>)</button>
@@ -305,6 +306,7 @@
         const attackButton = document.getElementById('attack-button');
         const upgradeButton = document.getElementById('upgrade-button');
         const exchangeBtn = document.getElementById('exchange-btn');
+        const rateBtn = document.getElementById('rate-btn');
         const restartButton = document.getElementById('restart-button');
         const skipButton = document.getElementById('skip-button');
         const skipCostEl = document.getElementById('skip-cost');
@@ -433,7 +435,6 @@
             totalAttackPowerEl.textContent = calculateTotalAttack();
             upgradeCostEl.textContent = gameData.upgradeCost;
 
-            // 交換コストは「攻撃力 × 6」
             const exchangeCost = gameData.attackPower * 6;
             exchangeCostEl.textContent = exchangeCost;
 
@@ -620,7 +621,6 @@
                 gameData.enemiesRemaining -= 1;
                 gameData.defeatCount += 1;
 
-                // ドラゴン撃破時はルビー確定（1個獲得）、通常は9%の確率
                 const isDragonDefeated = currentEnemy.name.includes("ドラゴン");
                 if (isDragonDefeated || Math.random() < 0.09) {
                     gameData.rubies += 1;
@@ -653,7 +653,6 @@
             }
         });
 
-        // 「攻撃力 × 6」のコインでルビー1個に交換
         exchangeBtn.addEventListener('click', () => {
             const exchangeCost = gameData.attackPower * 6;
             if (gameData.coins >= exchangeCost) {
@@ -667,6 +666,19 @@
             } else {
                 alert("コインが足りません！");
             }
+        });
+
+        // 確率一覧を表示するボタンの処理
+        rateBtn.addEventListener('click', () => {
+            alert(
+                "【 🎁 ガチャ排出確率一覧 】\n\n" +
+                "・普通の剣 (剣枠) : 30%\n" +
+                "・少しいい剣 (剣枠) : 20%\n" +
+                "・上質な剣 (剣枠) : 10%\n" +
+                "・宝石の剣 (剣枠) : 5% (※対ドラゴン特効)\n" +
+                "・健康飲料 (アイテム枠) : 25%\n" +
+                "・エナドリ (アイテム枠) : 10%"
+            );
         });
 
         restartButton.addEventListener('click', () => {
