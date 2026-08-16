@@ -10,41 +10,41 @@
             text-align: center;
             background-color: #f0f2f5;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             user-select: none;
             touch-action: manipulation;
         }
         h1 {
             color: #333;
-            font-size: 1.5rem;
-            margin-bottom: 5px;
+            font-size: 1.4rem;
+            margin-bottom: 2px;
         }
         .author {
             color: #666;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             margin-bottom: 10px;
         }
         .status-box {
             background: white;
-            padding: 12px;
+            padding: 10px;
             border-radius: 10px;
             max-width: 320px;
-            margin: 0 auto 15px auto;
+            margin: 0 auto 10px auto;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .enemy-name {
             font-size: 1.1rem;
             font-weight: bold;
             color: #d9534f;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
         .hp-bar-container {
             width: 100%;
             background-color: #e0e0e0;
             border-radius: 10px;
             overflow: hidden;
-            height: 18px;
-            margin-bottom: 5px;
+            height: 16px;
+            margin-bottom: 4px;
         }
         .hp-bar {
             width: 100%;
@@ -53,28 +53,32 @@
             transition: width 0.1s;
         }
         #hp-text {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: #333;
         }
         .info-panel {
-            font-size: 1rem;
-            margin-bottom: 15px;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
             color: #444;
             line-height: 1.4;
+        }
+        .max-record {
+            font-size: 0.75rem;
+            color: #888;
         }
         #attack-button {
             background-color: #ff5722;
             color: white;
             border: none;
             border-radius: 50%;
-            width: 150px;
-            height: 150px;
-            font-size: 1.4rem;
+            width: 130px;
+            height: 130px;
+            font-size: 1.3rem;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
             transition: transform 0.1s, background-color 0.1s;
-            margin: 0 auto 15px auto;
+            margin: 0 auto 10px auto;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -88,25 +92,92 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 6px;
             margin-bottom: 15px;
         }
         .button-row {
             display: flex;
             justify-content: center;
-            gap: 10px;
+            gap: 6px;
+            flex-wrap: wrap;
         }
         .action-btn {
             background-color: #007bff;
             color: white;
             border: none;
-            padding: 10px 15px;
-            font-size: 0.9rem;
+            padding: 8px 12px;
+            font-size: 0.85rem;
             border-radius: 5px;
             cursor: pointer;
         }
         .action-btn:active {
             background-color: #0056b3;
+        }
+        /* 装備 & 所持品セクション */
+        .section-box {
+            background: white;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 320px;
+            margin: 0 auto 10px auto;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 0.85rem;
+            text-align: left;
+        }
+        .section-box h3 {
+            margin: 0 0 5px 0;
+            font-size: 0.95rem;
+            color: #333;
+            text-align: center;
+        }
+        .slot-container {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 8px;
+            justify-content: center;
+        }
+        .slot {
+            flex: 1;
+            background: #f8f9fa;
+            border: 2px dashed #ccc;
+            border-radius: 6px;
+            padding: 6px;
+            text-align: center;
+            min-height: 45px;
+            font-size: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .slot.filled {
+            border: 2px solid #28a745;
+            background: #e8f5e9;
+        }
+        .inventory-list {
+            max-height: 90px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 5px;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+        .inv-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 5px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.8rem;
+        }
+        .inv-item button {
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            background: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
         }
         .clear-container {
             margin-top: 50px;
@@ -138,7 +209,9 @@
 
     <div class="info-panel">
         残り敵数: <span id="remaining-count">1000</span>体<br>
-        コイン: <span id="coin-count">0</span>枚 | 攻撃力: <span id="attack-power">1</span>
+        <span class="max-record">(歴代最高到達数: <span id="max-defeat-count">0</span>体)</span><br>
+        🪙 コイン: <span id="coin-count">0</span>枚 | 💎 ルビー: <span id="ruby-count">0</span>個<br>
+        総攻撃力: <span id="total-attack-power">1</span>
     </div>
     
     <button id="attack-button">攻撃！</button>
@@ -149,25 +222,65 @@
             <button class="action-btn" id="restart-button" style="background-color: #dc3545;">リスタート</button>
         </div>
         <div class="button-row">
-            <button class="action-btn" id="skip-button" style="background-color: #6c757d;">クールダウン中 (スキップ: 🪙<span id="skip-cost">0</span>)</button>
+            <button class="action-btn" id="gacha-1-btn" style="background-color: #e83e8c;">ガチャ1回 (💎10)</button>
+            <button class="action-btn" id="gacha-10-btn" style="background-color: #fd7e14;">ガチャ10連 (💎100)</button>
+        </div>
+        <div class="button-row">
+            <button class="action-btn" id="skip-button" style="background-color: #6c757d; display: none;">CDスキップ (🪙<span id="skip-cost">0</span>)</button>
+        </div>
+    </div>
+
+    <!-- 装備欄エリア -->
+    <div class="section-box">
+        <h3>⚔️ 装備スロット (最大3つ)</h3>
+        <div class="slot-container">
+            <div class="slot" id="slot-sword">
+                <span style="color:#888;">[剣枠]</span>
+                <span id="slot-0-name">なし</span>
+                <button id="unequip-0" style="display:none; font-size:0.65rem; margin-top:2px;" onclick="unequipItem(0)">外す</button>
+            </div>
+            <div class="slot" id="slot-item1">
+                <span style="color:#888;">[アイテム1]</span>
+                <span id="slot-1-name">なし</span>
+                <button id="unequip-1" style="display:none; font-size:0.65rem; margin-top:2px;" onclick="unequipItem(1)">外す</button>
+            </div>
+            <div class="slot" id="slot-item2">
+                <span style="color:#888;">[アイテム2]</span>
+                <span id="slot-2-name">なし</span>
+                <button id="unequip-2" style="display:none; font-size:0.65rem; margin-top:2px;" onclick="unequipItem(2)">外す</button>
+            </div>
+        </div>
+        <div style="font-size:0.75rem; color:#666; text-align:center;" id="active-buff-text"></div>
+    </div>
+
+    <!-- 所持品インベントリ -->
+    <div class="section-box">
+        <h3>🎒 所持アイテム一覧</h3>
+        <div class="inventory-list" id="inventory-list">
+            <div style="text-align:center; color:#888; font-size:0.8rem; padding:10px;">まだアイテムはありません</div>
         </div>
     </div>
 
     <script>
-        // ゲームデータ（セーブ対象）
         let gameData = {
             enemiesRemaining: 1000,
             coins: 0,
+            rubies: 0,
             attackPower: 1,
             upgradeCost: 3,
             enemyMaxHp: 10,
             enemyHp: 10,
             defeatCount: 0,
-            lastRestartTime: 0 // リスタートした時刻（ミリ秒）
+            maxDefeatCount: 0,
+            lastRestartTime: 0,
+            inventory: [], // 所持アイテムの配列 { id, name, type }
+            equipped: [null, null, null], // [0]:剣枠, [1]:アイテム枠1, [2]:アイテム枠2
+            buffEndTime: 0,  // ドリンクの有効期限（ミリ秒）
+            buffMultiplier: 1 // ドリンクの倍率
         };
 
         const GOAL = 1000;
-        const COOLDOWN_TIME = 15 * 60 * 1000; // 15分（ミリ秒）
+        const COOLDOWN_TIME = 15 * 60 * 1000;
 
         const normalEnemies = [
             { name: "スライム", hp: 10 },
@@ -183,18 +296,24 @@
         const hpBarEl = document.getElementById('hp-bar');
         const hpTextEl = document.getElementById('hp-text');
         const remainingCountEl = document.getElementById('remaining-count');
+        const maxDefeatCountEl = document.getElementById('max-defeat-count');
         const coinCountEl = document.getElementById('coin-count');
-        const attackPowerEl = document.getElementById('attack-power');
+        const rubyCountEl = document.getElementById('ruby-count');
+        const totalAttackPowerEl = document.getElementById('total-attack-power');
         const upgradeCostEl = document.getElementById('upgrade-cost');
         const attackButton = document.getElementById('attack-button');
         const upgradeButton = document.getElementById('upgrade-button');
         const restartButton = document.getElementById('restart-button');
         const skipButton = document.getElementById('skip-button');
         const skipCostEl = document.getElementById('skip-cost');
+        const gacha1Btn = document.getElementById('gacha-1-btn');
+        const gacha10Btn = document.getElementById('gacha-10-btn');
+        const inventoryListEl = document.getElementById('inventory-list');
+        const activeBuffTextEl = document.getElementById('active-buff-text');
         const body = document.body;
 
         function loadGame() {
-            const saved = localStorage.getItem('soramame_save_v3');
+            const saved = localStorage.getItem('soramame_save_v5');
             if (saved) {
                 try {
                     const parsed = JSON.parse(saved);
@@ -206,7 +325,7 @@
         }
 
         function saveGame() {
-            localStorage.setItem('soramame_save_v3', JSON.stringify(gameData));
+            localStorage.setItem('soramame_save_v5', JSON.stringify(gameData));
         }
 
         function getCoinReward(remaining) {
@@ -221,15 +340,15 @@
         }
 
         function getCurrentEnemyInfo(remaining) {
-            if (remaining === 950) return { name: "【ボス】ダウナー", hp: lastDragonHp * 25 };
-            if (remaining === 900) return { name: "【ボス】ダンビル", hp: lastDragonHp * 25 };
-            if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: lastDragonHp * 25 };
-            if (remaining === 600) return { name: "【ボス】ロメンテヤシ", hp: lastDragonHp * 25 };
-            if (remaining === 500) return { name: "【ボス】ソクラゼウス", hp: lastDragonHp * 75 };
-            if (remaining === 350) return { name: "【ボス】ダウナー EX", hp: lastDragonHp * 70 };
-            if (remaining === 100) return { name: "【ボス】終焉の支配者", hp: lastDragonHp * 100 };
-            if (remaining === 50)  return { name: "【ボス】ラストビュオス", hp: lastDragonHp * 150 };
-            if (remaining === 1)   return { name: "👑【ラスボス】そらまめ", hp: lastDragonHp * 250 };
+            if (remaining === 950) return { name: "【ボス】ダウナー", hp: lastDragonHp * 25, isDragon: false };
+            if (remaining === 900) return { name: "【ボス】ダンビル", hp: lastDragonHp * 25, isDragon: false };
+            if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: lastDragonHp * 25, isDragon: false };
+            if (remaining === 600) return { name: "【ボス】ロメンテヤシ", hp: lastDragonHp * 25, isDragon: false };
+            if (remaining === 500) return { name: "【ボス】ソクラゼウス", hp: lastDragonHp * 75, isDragon: false };
+            if (remaining === 350) return { name: "【ボス】ダウナー EX", hp: lastDragonHp * 70, isDragon: false };
+            if (remaining === 100) return { name: "【ボス】終焉の支配者", hp: lastDragonHp * 100, isDragon: false };
+            if (remaining === 50)  return { name: "【ボス】ラストビュオス", hp: lastDragonHp * 150, isDragon: false };
+            if (remaining === 1)   return { name: "👑【ラスボス】そらまめ", hp: lastDragonHp * 250, isDragon: false };
 
             const index = gameData.defeatCount % normalEnemies.length;
             const baseEnemy = normalEnemies[index];
@@ -241,7 +360,46 @@
             const groupLevel = Math.floor(gameData.defeatCount / 5);
             const scaledHp = Math.floor(baseEnemy.hp * Math.pow(1.5, groupLevel));
 
-            return { name: baseEnemy.name, hp: scaledHp };
+            // ドラゴン判定 (名前に「ドラゴン」が含まれるかインデックス4)
+            const isDragon = (baseEnemy.name.includes("ドラゴン"));
+
+            return { name: baseEnemy.name, hp: scaledHp, isDragon: isDragon };
+        }
+
+        // 実際の総攻撃力を計算する関数
+        function calculateTotalAttack() {
+            let base = gameData.attackPower;
+            let multiplier = 1;
+            let isDragonTarget = false;
+
+            // 現在の敵がドラゴンかどうかチェック
+            const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
+            if (currentEnemy.name.includes("ドラゴン") || currentEnemy.name.includes("ドラゴン")) {
+                isDragonTarget = true;
+            }
+
+            // 装備品の効果計算
+            gameData.equipped.forEach((item, index) => {
+                if (!item) return;
+                if (item.name === "普通の剣") multiplier *= 1.5;
+                if (item.name === "少しいい剣") multiplier *= 2;
+                if (item.name === "上質な剣") multiplier *= 3;
+                if (item.name === "宝石の剣") {
+                    multiplier *= 5;
+                    if (isDragonTarget) multiplier *= 2; // ドラゴンに対して2倍
+                }
+                if (item.name === "健康飲料") multiplier *= 1.5;
+                if (item.name === "エナドリ") multiplier *= 3;
+            });
+
+            // ドリンクバフの期限チェック＆適用
+            if (Date.now() < gameData.buffEndTime) {
+                multiplier *= gameData.buffMultiplier;
+            } else if (gameData.buffEndTime > 0) {
+                gameData.buffEndTime = 0; // 効果切れ
+            }
+
+            return Math.floor(base * multiplier);
         }
 
         function updateScreen() {
@@ -250,7 +408,7 @@
                     <div class="clear-container">
                         <h1>🎉 クリア！ 🎉</h1>
                         <p>おめでとう！<br>そらまめ軍団はすべての魔物を討伐し、平和を取り戻しました！</p>
-                        <button onclick="localStorage.removeItem('soramame_save_v3'); location.reload();">最初から遊ぶ</button>
+                        <button onclick="localStorage.removeItem('soramame_save_v5'); location.reload();">最初から遊ぶ</button>
                     </div>
                 `;
                 return;
@@ -270,33 +428,189 @@
             hpTextEl.textContent = `HP: ${gameData.enemyHp} / ${gameData.enemyMaxHp}`;
             
             remainingCountEl.textContent = gameData.enemiesRemaining;
+            maxDefeatCountEl.textContent = gameData.maxDefeatCount;
             coinCountEl.textContent = gameData.coins;
-            attackPowerEl.textContent = gameData.attackPower;
+            rubyCountEl.textContent = gameData.rubies;
+            totalAttackPowerEl.textContent = calculateTotalAttack();
             upgradeCostEl.textContent = gameData.upgradeCost;
 
-            // クールダウンとスキップコストの計算
+            // バフ残り時間の表示
+            if (Date.now() < gameData.buffEndTime) {
+                const leftSec = Math.ceil((gameData.buffEndTime - Date.now()) / 1000);
+                const min = Math.floor(leftSec / 60);
+                const sec = leftSec % 60;
+                activeBuffTextEl.textContent = `⚡ ドリンク効果発動中残り: ${min}分${sec}秒`;
+            } else {
+                activeBuffTextEl.textContent = "";
+            }
+
+            updateEquipmentUI();
+            updateInventoryUI();
+
+            // リスタートボタンの条件判定
             const now = Date.now();
             const elapsed = now - gameData.lastRestartTime;
             const skipCost = Math.round(gameData.attackPower * 1.5);
             skipCostEl.textContent = skipCost;
 
-            if (elapsed < COOLDOWN_TIME) {
+            let canRestart = true;
+            let restartMessage = "リスタート";
+            let showSkipButton = false;
+
+            if (gameData.defeatCount < gameData.maxDefeatCount) {
+                canRestart = false;
+                const needMore = gameData.maxDefeatCount - gameData.defeatCount;
+                restartMessage = `リスタート (あと${needMore}体)`;
+            } else if (elapsed < COOLDOWN_TIME) {
+                canRestart = false;
                 const remainingTimeMs = COOLDOWN_TIME - elapsed;
                 const remainingMinutes = Math.ceil(remainingTimeMs / (60 * 1000));
+                restartMessage = `リスタート (${remainingMinutes}分後)`;
+                showSkipButton = true;
+            }
+
+            if (!canRestart) {
                 restartButton.disabled = true;
                 restartButton.style.opacity = "0.6";
-                restartButton.textContent = `リスタート (${remainingMinutes}分後)`;
-                
-                skipButton.style.display = "inline-block";
+                restartButton.textContent = restartMessage;
+                skipButton.style.display = showSkipButton ? "inline-block" : "none";
             } else {
                 restartButton.disabled = false;
                 restartButton.style.opacity = "1";
                 restartButton.textContent = "リスタート";
-                
-                skipButton.style.display = "none"; // クールダウン中でなければ非表示
+                skipButton.style.display = "none";
             }
         }
 
+        // 装備画面のUI更新
+        function updateEquipmentUI() {
+            for (let i = 0; i < 3; i++) {
+                const nameEl = document.getElementById(`slot-${i}-name`);
+                const unequipBtn = document.getElementById(`unequip-${i}`);
+                const slotBox = document.getElementById(i === 0 ? 'slot-sword' : (i === 1 ? 'slot-item1' : 'slot-item2'));
+                
+                const item = gameData.equipped[i];
+                if (item) {
+                    nameEl.textContent = item.name;
+                    unequipBtn.style.display = "inline-block";
+                    slotBox.classList.add("filled");
+                } else {
+                    nameEl.textContent = "なし";
+                    unequipBtn.style.display = "none";
+                    slotBox.classList.remove("filled");
+                }
+            }
+        }
+
+        // インベントリのUI更新
+        function updateInventoryUI() {
+            if (gameData.inventory.length === 0) {
+                inventoryListEl.innerHTML = `<div style="text-align:center; color:#888; font-size:0.8rem; padding:5px;">まだアイテムはありません</div>`;
+                return;
+            }
+
+            let html = "";
+            gameData.inventory.forEach((item, index) => {
+                html += `
+                    <div class="inv-item">
+                        <span>${item.name}</span>
+                        <button onclick="equipItem(${index})">装備する</button>
+                    </div>
+                `;
+            });
+            inventoryListEl.innerHTML = html;
+        }
+
+        // アイテムを装備する
+        window.equipItem = function(invIndex) {
+            const item = gameData.inventory[invIndex];
+            if (!item) return;
+
+            const isSword = item.type === "sword";
+
+            if (isSword) {
+                // 剣枠（スロット0）へ。もし既に装備していたら所持品に戻す
+                if (gameData.equipped[0]) {
+                    gameData.inventory.push(gameData.equipped[0]);
+                }
+                gameData.equipped[0] = item;
+                gameData.inventory.splice(invIndex, 1);
+            } else {
+                // アイテム枠（スロット1 or 2）へ空いてるところを探す
+                let targetSlot = -1;
+                if (!gameData.equipped[1]) targetSlot = 1;
+                else if (!gameData.equipped[2]) targetSlot = 2;
+                else {
+                    // 両方埋まってたらスロット1と入れ替え
+                    targetSlot = 1;
+                    gameData.inventory.push(gameData.equipped[1]);
+                }
+
+                gameData.equipped[targetSlot] = item;
+                gameData.inventory.splice(invIndex, 1);
+            }
+
+            saveGame();
+            updateScreen();
+        };
+
+        // 装備を外す
+        window.unequipItem = function(slotIndex) {
+            const item = gameData.equipped[slotIndex];
+            if (!item) return;
+
+            gameData.inventory.push(item);
+            gameData.equipped[slotIndex] = null;
+
+            saveGame();
+            updateScreen();
+        };
+
+        // ガチャ実行関数
+        function rollGacha(count) {
+            const cost = count * 10;
+            if (gameData.rubies < cost) {
+                alert("ルビーが足りません！");
+                return;
+            }
+
+            const confirmMsg = count === 1 ? 
+                "💎10ルビーを消費してガチャを1回引きますか？" : 
+                "💎100ルビーを消費してガチャ10連を引きますか？";
+
+            if (!confirm(confirmMsg)) return;
+
+            gameData.rubies -= cost;
+            let results = [];
+
+            for (let i = 0; i < count; i++) {
+                const rand = Math.random() * 100;
+                let obtained = null;
+
+                if (rand < 30) {
+                    obtained = { name: "普通の剣", type: "sword" };
+                } else if (rand < 50) { // 30 + 20
+                    obtained = { name: "少しいい剣", type: "sword" };
+                } else if (rand < 60) { // 50 + 10
+                    obtained = { name: "上質な剣", type: "sword" };
+                } else if (rand < 65) { // 60 + 5
+                    obtained = { name: "宝石の剣", type: "sword" };
+                } else if (rand < 90) { // 65 + 25
+                    obtained = { name: "健康飲料", type: "item" };
+                } else { // 残り10%
+                    obtained = { name: "エナドリ", type: "item" };
+                }
+
+                gameData.inventory.push(obtained);
+                results.push(obtained.name);
+            }
+
+            saveGame();
+            updateScreen();
+            alert("ガチャ結果:\n" + results.join("\n"));
+        }
+
+        // 攻撃ボタン
         attackButton.addEventListener('click', () => {
             if (!gameData.enemyHp) {
                 const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
@@ -304,12 +618,23 @@
                 gameData.enemyHp = currentEnemy.hp;
             }
 
-            gameData.enemyHp -= gameData.attackPower;
+            // 実際の総攻撃力でダメージ
+            const currentAttack = calculateTotalAttack();
+            gameData.enemyHp -= currentAttack;
 
             if (gameData.enemyHp <= 0) {
                 gameData.coins += getCoinReward(gameData.enemiesRemaining);
                 gameData.enemiesRemaining -= 1;
                 gameData.defeatCount += 1;
+
+                // 7%の確率でルビー獲得
+                if (Math.random() < 0.07) {
+                    gameData.rubies += 1;
+                }
+
+                if (gameData.defeatCount > gameData.maxDefeatCount) {
+                    gameData.maxDefeatCount = gameData.defeatCount;
+                }
 
                 if (gameData.enemiesRemaining > 0) {
                     const nextEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
@@ -322,6 +647,7 @@
             updateScreen();
         });
 
+        // 強化ボタン
         upgradeButton.addEventListener('click', () => {
             if (gameData.coins >= gameData.upgradeCost) {
                 gameData.coins -= gameData.upgradeCost;
@@ -336,19 +662,24 @@
 
         // リスタートボタン
         restartButton.addEventListener('click', () => {
+            if (gameData.defeatCount < gameData.maxDefeatCount) {
+                alert("歴代の最高到達点まで進まないとリスタートできません！");
+                return;
+            }
+            
             const now = Date.now();
             if (now - gameData.lastRestartTime < COOLDOWN_TIME) {
                 alert("まだクールダウン中です！");
                 return;
             }
 
-            if (confirm("残りの敵を1000体にリセットしますか？（コインや攻撃力はそのまま引き継がれます。次回から15分間のクールダウンが発生します）")) {
+            if (confirm("残りの敵を1000体にリセットしますか？（コインやガチャアイテムはそのまま引き継がれます）")) {
                 gameData.enemiesRemaining = 1000;
                 gameData.defeatCount = 0;
                 const firstEnemy = getCurrentEnemyInfo(1000);
                 gameData.enemyMaxHp = firstEnemy.hp;
                 gameData.enemyHp = firstEnemy.hp;
-                gameData.lastRestartTime = Date.now(); // 現在時刻を記録
+                gameData.lastRestartTime = Date.now();
                 saveGame();
                 updateScreen();
             }
@@ -360,7 +691,7 @@
             if (gameData.coins >= skipCost) {
                 if (confirm(`🪙${skipCost}枚を支払ってクールダウンをスキップしますか？`)) {
                     gameData.coins -= skipCost;
-                    gameData.lastRestartTime = 0; // タイマーをリセットして即座にリスタート可能にする
+                    gameData.lastRestartTime = 0;
                     saveGame();
                     updateScreen();
                     alert("クールダウンをスキップしました！");
@@ -370,6 +701,9 @@
             }
         });
 
+        gacha1Btn.addEventListener('click', () => rollGacha(1));
+        gacha10Btn.addEventListener('click', () => rollGacha(10));
+
         loadGame();
         const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
         if (!gameData.enemyHp || gameData.enemyHp > currentEnemy.hp) {
@@ -377,7 +711,7 @@
             gameData.enemyHp = currentEnemy.hp;
         }
         
-        // 1秒ごとに画面を更新してクールダウンの残り時間をリアルタイム反映
+        // 1秒ごとに画面を更新（タイマーやドリンクの効果切れを監視）
         setInterval(updateScreen, 1000);
 
         updateScreen();
