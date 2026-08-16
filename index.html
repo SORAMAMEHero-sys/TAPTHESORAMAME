@@ -386,8 +386,8 @@
                 if (item.name === "普通の剣") multiplier *= 1.5;
                 if (item.name === "少しいい剣") multiplier *= 2;
                 if (item.name === "上質な剣") multiplier *= 3;
-                if (item.name === "宝石の剣") {
-                    multiplier *= 5;
+                if (item.name === "伝説の剣") {
+                    multiplier *= 7;
                     if (isDragonTarget) multiplier *= 2;
                 }
                 if (item.name === "健康飲料") multiplier *= 1.5;
@@ -581,15 +581,15 @@
                 const rand = Math.random() * 100;
                 let obtained = null;
 
-                if (rand < 30) {
+                if (rand < 35) {
                     obtained = { name: "普通の剣", type: "sword" };
-                } else if (rand < 50) {
-                    obtained = { name: "少しいい剣", type: "sword" };
                 } else if (rand < 60) {
+                    obtained = { name: "少しいい剣", type: "sword" };
+                } else if (rand < 75) {
                     obtained = { name: "上質な剣", type: "sword" };
-                } else if (rand < 65) {
-                    obtained = { name: "宝石の剣", type: "sword" };
-                } else if (rand < 90) {
+                } else if (rand < 80) {
+                    obtained = { name: "伝説の剣", type: "sword" }; // 7倍＆ドラゴン2倍
+                } else if (rand < 95) {
                     obtained = { name: "健康飲料", type: "item" };
                 } else {
                     obtained = { name: "エナドリ", type: "item" };
@@ -604,7 +604,7 @@
             alert("ガチャ結果:\n" + results.join("\n"));
         }
 
-        attackButton.addEventListener('click', () => {
+        function performAttack() {
             if (!gameData.enemyHp) {
                 const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
                 gameData.enemyMaxHp = currentEnemy.hp;
@@ -639,7 +639,14 @@
 
             saveGame();
             updateScreen();
-        });
+        }
+
+        attackButton.addEventListener('click', performAttack);
+
+        // 2秒（2000ミリ秒）ごとに自動で1タップしてくれる機能
+        setInterval(() => {
+            performAttack();
+        }, 2000);
 
         upgradeButton.addEventListener('click', () => {
             if (gameData.coins >= gameData.upgradeCost) {
@@ -668,16 +675,16 @@
             }
         });
 
-        // 確率一覧を表示するボタンの処理
         rateBtn.addEventListener('click', () => {
             alert(
                 "【 🎁 ガチャ排出確率一覧 】\n\n" +
-                "・普通の剣 (剣枠) : 30%\n" +
-                "・少しいい剣 (剣枠) : 20%\n" +
-                "・上質な剣 (剣枠) : 10%\n" +
-                "・宝石の剣 (剣枠) : 5% (※対ドラゴン特効)\n" +
-                "・健康飲料 (アイテム枠) : 25%\n" +
-                "・エナドリ (アイテム枠) : 10%"
+                "・普通の剣 (35%): 攻撃力 1.5倍\n" +
+                "・少しいい剣 (25%): 攻撃力 2倍\n" +
+                "・上質な剣 (15%): 攻撃力 3倍\n" +
+                "・伝説の剣 (5%): 攻撃力 7倍 (※対ドラゴン2倍！)\n" +
+                "・健康飲料 (15%): 攻撃力 1.5倍\n" +
+                "・エナドリ (5%): 攻撃力 3倍\n\n" +
+                "⚡ 2秒ごとに自動で1回攻撃します！"
             );
         });
 
