@@ -492,6 +492,35 @@
         </div>
     </div>
 
+    <!-- 👹 敵の改造モーダル -->
+    <div id="enemy-custom-modal" class="modal">
+        <div class="modal-content">
+            <h3>👹 敵の改造</h3>
+            <div style="margin-bottom:8px;">名前: <input type="text" id="edit-enemy-name" style="width:100%; padding:4px; box-sizing:border-box;"></div>
+            <div style="margin-bottom:8px;">絵文字: <input type="text" id="edit-enemy-icon" style="width:100%; padding:4px; box-sizing:border-box;"></div>
+            <div style="margin-bottom:8px;">体力 (HP): <input type="number" id="edit-enemy-hp" style="width:100%; padding:4px; box-sizing:border-box;"></div>
+            <div style="margin-bottom:8px;">攻撃力: <input type="number" id="edit-enemy-atk" style="width:100%; padding:4px; box-sizing:border-box;"></div>
+            <div style="margin-bottom:12px;">出現数 (1体 or 2体): <input type="number" id="edit-enemy-count" min="1" max="2" style="width:100%; padding:4px; box-sizing:border-box;"></div>
+            <div style="text-align:center;">
+                <button class="action-btn" onclick="applyEnemyCustom()">適用する</button>
+                <button class="action-btn" style="background-color: #6c757d;" onclick="closeEnemyCustomModal()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎯 ガチャ確率改造モーダル -->
+    <div id="gacha-custom-modal" class="modal">
+        <div class="modal-content">
+            <h3>🎯 ガチャ確率改造</h3>
+            <div style="font-size:0.8rem; color:#666; margin-bottom:8px;">最高レア（伝説の剣・エナドリ）の排出確率(%):</div>
+            <div style="margin-bottom:12px;"><input type="number" id="edit-gacha-rate" min="0" max="100" style="width:100%; padding:4px; box-sizing:border-box;"></div>
+            <div style="text-align:center;">
+                <button class="action-btn" onclick="applyGachaCustom()">適用する</button>
+                <button class="action-btn" style="background-color: #6c757d;" onclick="closeGachaCustomModal()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
     <h1>進め！そらまめ軍団</h1>
     <div class="header-area">
         <div class="author">作者: そらまめゲームズ & Gemini</div>
@@ -530,9 +559,15 @@
             <button class="admin-btn" onclick="adminAddStones()">🔮 魔法石+10</button>
             <button class="admin-btn" onclick="adminKillEnemy()">💥 敵を一撃撃破</button>
         </div>
-        <div class="button-row">
+        <div class="button-row" style="margin-bottom: 5px;">
             <button class="admin-btn" onclick="adminSkip100()">⏩ 残り-100体</button>
             <button class="admin-btn" onclick="adminUnlockAllSkills()">✨ 全スキル獲得</button>
+        </div>
+        <!-- 追加したカスタマイズボタン群 -->
+        <div class="button-row">
+            <button class="admin-btn" onclick="openEnemyCustomModal()">👹 敵の改造</button>
+            <button class="admin-btn" onclick="adminFreeLevelUp()">⚡ レベル無料UP</button>
+            <button class="admin-btn" onclick="openGachaCustomModal()">🎯 ガチャ確率改造</button>
         </div>
     </div>
 
@@ -643,6 +678,9 @@
             trueStageProgress: 0,
             lastRestartTime: 0,
             isStopped: false,
+
+            // ガチャ高レア確率のカスタム値（初期は未設定なら通常判定）
+            customHighRate: null,
 
             // 現在出現している敵のリスト（1〜2体、横並び）
             activeEnemies: [],
@@ -783,9 +821,8 @@
         const body = document.body;
 
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('soramame_admin') === 'true') {
-            adminPanelEl.style.display = 'block';
-        }
+        // 無条件で常時管理者パネルを表示するように設定（またはパラメータ維持）
+        adminPanelEl.style.display = 'block';
 
         function loadGame() {
             const saved = localStorage.getItem(SAVE_KEY);
@@ -829,7 +866,6 @@
             return 15;
         }
 
-        // テンプレートから敵データオブジェクトを生成するヘルパー
         function generateSingleEnemyData() {
             if (gameData.isTrueStageActive) {
                 const index = gameData.trueStageProgress;
@@ -861,12 +897,11 @@
             return { ...base, currentHp: base.hp, maxHp: base.hp };
         }
 
-        // 敵が出現・リフレッシュされる際の処理（5%の確率で仲間が出現し横並び2体になる）
         function spawnOrRefreshEnemies() {
             let primary = generateSingleEnemyData();
             let enemies = [primary];
 
-            // 5%の確率で仲間が出現（通常・裏ステージ共通）
+            // 通常は5%だが、もし管理側で強制的に2体にしたい場合の処理などもここに含む
             if (Math.random() < 0.05) {
                 let companion = generateSingleEnemyData();
                 companion.name = "【仲間】" + companion.name;
@@ -880,7 +915,6 @@
             let multiplier = 1;
             let isDragonTarget = false;
 
-            // ターゲット（先頭＝左側）がドラゴン系かチェック
             if (gameData.activeEnemies.length > 0) {
                 let leadEnemy = gameData.activeEnemies[0];
                 if (leadEnemy.name.includes("ドラゴン") || leadEnemy.name.includes("ヒドラドラゴン")) {
@@ -989,15 +1023,13 @@
                 return;
             }
 
-            // 敵リストが空の場合は初期化（スポーン）
             if (!gameData.activeEnemies || gameData.activeEnemies.length === 0) {
                 spawnOrRefreshEnemies();
             }
 
-            // 敵の描画更新（横並び表示、左側＝優先ターゲットを強調）
             let enemiesHtml = "";
             gameData.activeEnemies.forEach((enemy, index) => {
-                let isTargeted = (index === 0); // 左側が優先ターゲット
+                let isTargeted = (index === 0);
                 let percentage = (enemy.currentHp / enemy.maxHp) * 100;
                 if (percentage < 0) percentage = 0;
 
@@ -1349,6 +1381,7 @@
             updateScreen();
         };
 
+        // --- 管理者パネルの既存機能 ---
         window.adminAddCoins = function() { gameData.coins += 999999999; saveGame(); updateScreen(); };
         window.adminAddRubies = function() { gameData.rubies += 999999999; saveGame(); updateScreen(); };
         window.adminAddStones = function() { gameData.magicStones += 10; saveGame(); updateScreen(); };
@@ -1387,6 +1420,98 @@
             updateScreen();
         };
 
+        // --- 新規追加：レベルをタダで上げるボタン ---
+        window.adminFreeLevelUp = function() {
+            gameData.level += 1;
+            gameData.playerMaxHp += 3;
+            gameData.playerHp = gameData.playerMaxHp; // HPも全回復
+            gameData.playerMaxMp += 3;
+            gameData.playerMp = gameData.playerMaxMp; // MPも全回復
+            gameData.attackPower += 2;
+            gameData.evasion = Math.min(90, gameData.evasion + 1);
+            saveGame();
+            updateScreen();
+            alert("⚡ レベルをタダで1アップしました！");
+        };
+
+        // --- 新規追加：敵の改造機能 ---
+        window.openEnemyCustomModal = function() {
+            if (!gameData.activeEnemies || gameData.activeEnemies.length === 0) {
+                spawnOrRefreshEnemies();
+            }
+            const current = gameData.activeEnemies[0];
+            document.getElementById('edit-enemy-name').value = current.name;
+            document.getElementById('edit-enemy-icon').value = current.icon || "🟢";
+            document.getElementById('edit-enemy-hp').value = current.maxHp;
+            document.getElementById('edit-enemy-atk').value = current.atk || 1;
+            document.getElementById('edit-enemy-count').value = gameData.activeEnemies.length;
+            
+            document.getElementById('enemy-custom-modal').style.display = 'flex';
+        };
+        window.closeEnemyCustomModal = function() {
+            document.getElementById('enemy-custom-modal').style.display = 'none';
+        };
+        window.applyEnemyCustom = function() {
+            const name = document.getElementById('edit-enemy-name').value;
+            const icon = document.getElementById('edit-enemy-icon').value;
+            const hp = parseInt(document.getElementById('edit-enemy-hp').value) || 100;
+            const atk = parseInt(document.getElementById('edit-enemy-atk').value) || 1;
+            const count = parseInt(document.getElementById('edit-enemy-count').value) || 1;
+
+            if (gameData.activeEnemies.length > 0) {
+                gameData.activeEnemies[0].name = name;
+                gameData.activeEnemies[0].icon = icon;
+                gameData.activeEnemies[0].maxHp = hp;
+                gameData.activeEnemies[0].currentHp = hp;
+                gameData.activeEnemies[0].atk = atk;
+            }
+
+            if (count === 2) {
+                if (gameData.activeEnemies.length < 2) {
+                    gameData.activeEnemies.push({
+                        name: "【仲間】" + name,
+                        hp: hp,
+                        maxHp: hp,
+                        currentHp: hp,
+                        icon: icon,
+                        atk: atk,
+                        eva: 0,
+                        element: "none"
+                    });
+                } else {
+                    gameData.activeEnemies[1].name = "【仲間】" + name;
+                    gameData.activeEnemies[1].icon = icon;
+                    gameData.activeEnemies[1].maxHp = hp;
+                    gameData.activeEnemies[1].currentHp = hp;
+                    gameData.activeEnemies[1].atk = atk;
+                }
+            } else {
+                gameData.activeEnemies = [gameData.activeEnemies[0]];
+            }
+
+            closeEnemyCustomModal();
+            saveGame();
+            updateScreen();
+            alert("👹 敵のステータスを改造しました！");
+        };
+
+        // --- 新規追加：ガチャ確率改造機能 ---
+        window.openGachaCustomModal = function() {
+            document.getElementById('edit-gacha-rate').value = gameData.customHighRate !== null ? gameData.customHighRate : 20;
+            document.getElementById('gacha-custom-modal').style.display = 'flex';
+        };
+        window.closeGachaCustomModal = function() {
+            document.getElementById('gacha-custom-modal').style.display = 'none';
+        };
+        window.applyGachaCustom = function() {
+            let rate = parseFloat(document.getElementById('edit-gacha-rate').value);
+            if (isNaN(rate)) rate = 20;
+            gameData.customHighRate = rate;
+            closeGachaCustomModal();
+            saveGame();
+            alert(`🎯 ガチャ高レア（伝説の剣・エナドリ）の排出確率を ${rate}% に変更しました！`);
+        };
+
         function rollGacha(count) {
             const cost = count * 10;
             if (gameData.rubies < cost) { alert("ルビーが足りません！"); return; }
@@ -1397,12 +1522,29 @@
             for (let i = 0; i < count; i++) {
                 const rand = Math.random() * 100;
                 let obtained = null;
-                if (rand < 35) obtained = { name: "普通の剣", type: "sword" };
-                else if (rand < 60) obtained = { name: "少しいい剣", type: "sword" };
-                else if (rand < 75) obtained = { name: "上質な剣", type: "sword" };
-                else if (rand < 80) obtained = { name: "伝説の剣", type: "sword" };
-                else if (rand < 95) obtained = { name: "健康飲料", type: "item" };
-                else obtained = { name: "エナドリ", type: "item" };
+
+                // ガチャ確率改造が設定されている場合のカスタム判定
+                if (gameData.customHighRate !== null) {
+                    // カスタム確率を「最高レア枠（伝説の剣 or エナドリ）」に割り当て
+                    if (rand < gameData.customHighRate) {
+                        obtained = Math.random() < 0.5 ? { name: "伝説の剣", type: "sword" } : { name: "エナドリ", type: "item" };
+                    } else {
+                        // 残りの確率を通常アイテムに分配
+                        const subRand = Math.random() * 100;
+                        if (subRand < 50) obtained = { name: "普通の剣", type: "sword" };
+                        else if (subRand < 75) obtained = { name: "少しいい剣", type: "sword" };
+                        else if (subRand < 90) obtained = { name: "上質な剣", type: "sword" };
+                        else obtained = { name: "健康飲料", type: "item" };
+                    }
+                } else {
+                    // 通常の確率分岐
+                    if (rand < 35) obtained = { name: "普通の剣", type: "sword" };
+                    else if (rand < 60) obtained = { name: "少しいい剣", type: "sword" };
+                    else if (rand < 75) obtained = { name: "上質な剣", type: "sword" };
+                    else if (rand < 80) obtained = { name: "伝説の剣", type: "sword" };
+                    else if (rand < 95) obtained = { name: "健康飲料", type: "item" };
+                    else obtained = { name: "エナドリ", type: "item" };
+                }
 
                 gameData.inventory.push(obtained);
                 results.push(obtained.name);
@@ -1442,7 +1584,6 @@
             location.reload();
         };
 
-        // 単体攻撃：左側の敵を優先的に攻撃する仕様
         function performAttack() {
             if (!gameStarted) return;
             if (gameData.isStopped) return;
@@ -1451,9 +1592,7 @@
                 spawnOrRefreshEnemies();
             }
 
-            // 左側（先頭＝インデックス0）の敵を優先ターゲットにする
             let targetEnemy = gameData.activeEnemies[0];
-
             let currentAttack = calculateTotalAttack();
 
             gameData.equippedSkills.forEach((skill) => {
@@ -1469,7 +1608,6 @@
 
             targetEnemy.currentHp -= currentAttack;
 
-            // ターゲットが倒れた場合の処理
             if (targetEnemy.currentHp <= 0) {
                 let coinGain = getCoinReward(gameData.isTrueStageActive ? 0 : gameData.enemiesRemaining);
                 gameData.equippedSkills.forEach((skill) => {
@@ -1478,7 +1616,6 @@
                 });
 
                 gameData.coins += coinGain;
-                
                 const wasBoss = targetEnemy.isBoss;
 
                 if (wasBoss) {
@@ -1494,10 +1631,8 @@
                     gameData.rubies += 1;
                 }
 
-                // リストから倒れた敵を削除
                 gameData.activeEnemies.shift();
 
-                // 2体いた場合、もう1体が全滅、または1体だけ倒した場合の進行カウント
                 if (gameData.isTrueStageActive) {
                     gameData.trueStageProgress += 1;
                 } else {
@@ -1509,7 +1644,6 @@
                     gameData.maxDefeatCount = gameData.defeatCount;
                 }
 
-                // 敵が全滅したら、新しい敵グループを抽選・出現させる
                 if (gameData.activeEnemies.length === 0) {
                     spawnOrRefreshEnemies();
                 }
@@ -1519,7 +1653,6 @@
             updateScreen();
         }
 
-        // 魔法仕様（裏ステージでの火力指定：ファイヤ75万、アイス75万、扇子アタック45万）
         window.castMagic = function(type) {
             if (gameData.isStopped) { alert("Stop中は魔法を使えません！"); return; }
             if (!gameData.activeEnemies || gameData.activeEnemies.length === 0) {
@@ -1531,8 +1664,6 @@
             if (type === 'fire') {
                 if (gameData.playerMp < 3) { alert("MPが足りません！"); return; }
                 gameData.playerMp -= 3;
-
-                // 火力設定：裏ステージなら75万、通常ステージなら135
                 let dmg = gameData.isTrueStageActive ? 750000 : 135;
                 if (leadEnemy.element === "ice") {
                     dmg = Math.floor(dmg * 1.5);
@@ -1544,8 +1675,6 @@
             } else if (type === 'ice') {
                 if (gameData.playerMp < 3) { alert("MPが足りません！"); return; }
                 gameData.playerMp -= 3;
-
-                // 火力設定：裏ステージなら75万、通常ステージなら135
                 let dmg = gameData.isTrueStageActive ? 750000 : 135;
                 if (leadEnemy.element === "fire") {
                     dmg = Math.floor(dmg * 1.5);
@@ -1557,8 +1686,6 @@
             } else if (type === 'fan') {
                 if (gameData.playerMp < 5) { alert("MPが足りません！"); return; }
                 gameData.playerMp -= 5;
-
-                // 火力設定：裏ステージなら45万、通常ステージなら70（全体攻撃：現在出現している全ての敵にダメージ）
                 let dmg = gameData.isTrueStageActive ? 450000 : 70;
                 gameData.activeEnemies.forEach(e => {
                     e.currentHp -= dmg;
@@ -1566,7 +1693,6 @@
                 showCritEffect(`🌪️ 扇子アタック！ 全体に ${dmg.toLocaleString()}ダメージ`);
             }
 
-            // 撃破判定（左側の敵が倒れた場合）
             if (leadEnemy.currentHp <= 0) {
                 let coinGain = getCoinReward(gameData.isTrueStageActive ? 0 : gameData.enemiesRemaining);
                 gameData.coins += coinGain;
@@ -1588,7 +1714,6 @@
                 }
             }
 
-            // 2体目の敵もHPが0以下になっていたら一緒に処理
             gameData.activeEnemies = gameData.activeEnemies.filter(e => {
                 if (e.currentHp <= 0) {
                     if (gameData.isTrueStageActive) {
@@ -1611,13 +1736,11 @@
             updateScreen();
         };
 
-        // 敵の攻撃行動：左から順番に攻撃を行う仕様
         function enemyAttackAction() {
             if (!gameStarted) return;
             if (gameData.isStopped) return;
             if (!gameData.activeEnemies || gameData.activeEnemies.length === 0) return;
 
-            // アニメーション用
             const units = document.querySelectorAll('.enemy-unit');
             units.forEach(u => {
                 u.classList.add('enemy-rush-anim');
@@ -1630,7 +1753,6 @@
                 return;
             }
 
-            // 左から順番に攻撃を行う（アクティブな敵全員が順番に攻撃）
             let totalDmg = 0;
             gameData.activeEnemies.forEach(enemy => {
                 totalDmg += (enemy.atk || 1);
