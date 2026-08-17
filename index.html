@@ -259,7 +259,7 @@
     
     <button id="attack-button">攻撃！</button>
 
-    <!-- 管理者専用パネル（URLに ?soramame_admin=true がある人のみ表示） -->
+    <!-- 管理者専用パネル -->
     <div class="section-box admin-panel" id="admin-panel">
         <h3>⚙️ 管理者パネル</h3>
         <div class="button-row" style="margin-bottom: 5px;">
@@ -349,6 +349,8 @@
     </div>
 
     <script>
+        const SAVE_KEY = 'soramame_save_v9';
+
         let gameData = {
             enemiesRemaining: 1000,
             coins: 0,
@@ -410,14 +412,10 @@
         }
 
         function loadGame() {
-            const saved = localStorage.getItem('soramame_save_v8');
-            let targetSave = saved;
-            if (!targetSave) {
-                targetSave = localStorage.getItem('soramame_save_v7') || localStorage.getItem('soramame_save_v6') || localStorage.getItem('soramame_save_v5');
-            }
-            if (targetSave) {
+            const saved = localStorage.getItem(SAVE_KEY);
+            if (saved) {
                 try {
-                    const parsed = JSON.parse(targetSave);
+                    const parsed = JSON.parse(saved);
                     gameData = { ...gameData, ...parsed };
                 } catch(e) {
                     console.log("セーブデータの読み込みに失敗しました");
@@ -426,7 +424,7 @@
         }
 
         function saveGame() {
-            localStorage.setItem('soramame_save_v8', JSON.stringify(gameData));
+            localStorage.setItem(SAVE_KEY, JSON.stringify(gameData));
         }
 
         // 完全初期化（確認ダイアログ5回）
@@ -437,11 +435,10 @@
             if (!confirm("最後の確認です。本当に最初からにしますか？")) return;
             if (!confirm("それではデータを完全削除します。よろしいですね？")) return;
 
-            // 全セーブデータを削除
-            localStorage.removeItem('soramame_save_v8');
-            localStorage.removeItem('soramame_save_v7');
-            localStorage.removeItem('soramame_save_v6');
-            localStorage.removeItem('soramame_save_v5');
+            // 全てのバージョンのセーブデータを一掃
+            localStorage.clear();
+            
+            // ページを完全に再読み込みしてタイマーを完全にリセット
             location.reload();
         };
 
@@ -549,7 +546,7 @@
                     <div class="clear-container">
                         <h1>🎉 クリア！ 🎉</h1>
                         <p>おめでとう！<br>そらまめ軍団はすべての魔物を討伐し、平和を取り戻しました！</p>
-                        <button onclick="localStorage.removeItem('soramame_save_v8'); location.reload();">最初から遊ぶ</button>
+                        <button onclick="localStorage.clear(); location.reload();">最初から遊ぶ</button>
                     </div>
                 `;
                 return;
