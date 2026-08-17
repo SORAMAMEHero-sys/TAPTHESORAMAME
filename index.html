@@ -61,7 +61,7 @@
             align-items: center;
             z-index: 10000;
             color: white;
-            font-family: sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             transition: opacity 0.5s;
         }
         #start-screen h1 {
@@ -244,7 +244,7 @@
         }
 
         body {
-            font-family: sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;
             text-align: center;
             background-color: #f0f2f5;
             margin: 0;
@@ -252,25 +252,18 @@
             user-select: none;
             touch-action: manipulation;
             transition: background 0.5s ease;
+            color: #333;
         }
 
-        /* 最高討伐数に応じた背景スタイル */
-        body.bg-green {
-            background-color: #2e7d32 !important;
-        }
-        body.bg-blue {
-            background-color: #1565c0 !important;
-        }
-        body.bg-red {
-            background-color: #c62828 !important;
-        }
-        body.bg-purple {
-            background-color: #6a1b9a !important;
-        }
-        body.bg-black-red {
-            background: #0d0d0d !important;
-            animation: redAura 2s infinite alternate;
-        }
+        /* 最高討伐数に応じた背景スタイルと文字色の補正 */
+        body.bg-green { background-color: #2e7d32 !important; color: #fff; }
+        body.bg-blue { background-color: #1565c0 !important; color: #fff; }
+        body.bg-red { background-color: #c62828 !important; color: #fff; }
+        body.bg-purple { background-color: #6a1b9a !important; color: #fff; }
+        body.bg-black-red { background: #0d0d0d !important; animation: redAura 2s infinite alternate; color: #fff; }
+
+        body.bg-green h1, body.bg-blue h1, body.bg-red h1, body.bg-purple h1, body.bg-black-red h1 { color: #fff; }
+        body.bg-green .author, body.bg-blue .author, body.bg-red .author, body.bg-purple .author, body.bg-black-red .author { color: #ddd; }
 
         @keyframes redAura {
             0% { box-shadow: inset 0 0 30px #ff0000; }
@@ -281,6 +274,7 @@
             color: #333;
             font-size: 1.4rem;
             margin-bottom: 2px;
+            font-weight: bold;
         }
         .header-area {
             display: flex;
@@ -310,6 +304,7 @@
             max-width: 340px;
             margin: 0 auto 10px auto;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            color: #333;
         }
         .enemy-name {
             font-size: 0.95rem;
@@ -347,15 +342,25 @@
             color: #333;
             font-weight: bold;
         }
+
+        /* 見やすさ改善：ステータスパネルをカード状にして背景と同化するのを防止 */
         .info-panel {
             font-size: 0.9rem;
-            margin-bottom: 10px;
-            color: #444;
-            line-height: 1.4;
+            margin: 0 auto 10px auto;
+            color: #333;
+            line-height: 1.5;
+            background: #ffffff;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 340px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-weight: bold;
+            box-sizing: border-box;
         }
         .max-record {
             font-size: 0.75rem;
-            color: #888;
+            color: #666;
+            font-weight: normal;
         }
         #attack-button {
             background-color: #ff5722;
@@ -400,6 +405,7 @@
             font-size: 0.85rem;
             border-radius: 5px;
             cursor: pointer;
+            font-weight: bold;
         }
         .action-btn:active {
             background-color: #0056b3;
@@ -413,6 +419,7 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             font-size: 0.85rem;
             text-align: left;
+            color: #333;
         }
         .section-box h3 {
             margin: 0 0 5px 0;
@@ -439,6 +446,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            color: #333;
         }
         .slot.filled {
             border: 2px solid #28a745;
@@ -451,6 +459,7 @@
             padding: 5px;
             border-radius: 5px;
             background: #fafafa;
+            color: #333;
         }
         .inv-item {
             display: flex;
@@ -948,7 +957,7 @@
         const howtoModal = document.getElementById('howto-modal');
         const body = document.body;
 
-        // 背景色の更新処理を追加
+        // 背景色の更新処理
         function updateBackgroundColor() {
             body.classList.remove('bg-green', 'bg-blue', 'bg-red', 'bg-purple', 'bg-black-red');
             const count = gameData.maxDefeatCount;
@@ -1575,7 +1584,7 @@
 
         window.adminFreeLevelUp = function() {
             gameData.level += 1;
-            gameData.playerMaxHp += 10; // 体力上限+10に変更
+            gameData.playerMaxHp += 10;
             gameData.playerHp = gameData.playerMaxHp;
             gameData.playerMaxMp += 3;
             gameData.playerMp = gameData.playerMaxMp;
@@ -1992,7 +2001,6 @@
                 gameData.equippedSkills.forEach(skill => {
                     if (skill && skill.type === "turret") {
                         let intervalSec = parseFloat(skill.param1) || 3;
-                        // 1秒ごとにチェックし、各タレットのインターバル秒数に合わせて発動させる簡易処理
                         if (Math.random() < (1 / intervalSec)) {
                             performAttack();
                         }
@@ -2089,8 +2097,8 @@
             gameData.magicStones -= reqStones;
 
             gameData.level += 1;
-            gameData.playerMaxHp += 10; // 体力上限+10に変更
-            gameData.playerHp += 10;    // 上限増加に伴い現在HPも+10
+            gameData.playerMaxHp += 10;
+            gameData.playerHp += 10;
             gameData.playerMaxMp += 3;
             gameData.playerMp = gameData.playerMaxMp;
             gameData.attackPower += 2;
