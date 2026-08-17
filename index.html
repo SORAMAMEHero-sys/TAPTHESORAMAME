@@ -5,6 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>進め！そらまめ軍団</title>
     <style>
+        @keyframes shake {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            20% { transform: translate(-6px, 4px) rotate(-1deg); }
+            40% { transform: translate(6px, -4px) rotate(1deg); }
+            60% { transform: translate(-4px, -2px) rotate(0deg); }
+            80% { transform: translate(4px, 2px) rotate(1deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        .screen-shake {
+            animation: shake 0.2s ease-in-out;
+        }
+
+        @keyframes popUpText {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            50% { transform: translate(-50%, -80%) scale(1.3); opacity: 1; }
+            100% { transform: translate(-50%, -120%) scale(1); opacity: 0; }
+        }
+        .crit-popup {
+            position: fixed;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffcc00;
+            text-shadow: 2px 2px 0 #d9534f, -2px -2px 0 #d9534f, 2px -2px 0 #d9534f, -2px 2px 0 #d9534f;
+            pointer-events: none;
+            z-index: 9999;
+            animation: popUpText 0.5s ease-out forwards;
+        }
+
         body {
             font-family: sans-serif;
             text-align: center;
@@ -39,9 +70,6 @@
             font-size: 0.7rem;
             border-radius: 4px;
             cursor: pointer;
-        }
-        .hard-reset-btn:active {
-            background-color: #1d2124;
         }
         .status-box {
             background: white;
@@ -96,7 +124,7 @@
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: transform 0.1s, background-color 0.1s;
+            transition: transform 0.08s, background-color 0.1s;
             margin: 0 auto 10px auto;
             display: flex;
             align-items: center;
@@ -104,7 +132,7 @@
             touch-action: manipulation;
         }
         #attack-button:active {
-            transform: scale(0.95);
+            transform: scale(0.90);
             background-color: #e64a19;
         }
         .menu-buttons {
@@ -216,9 +244,6 @@
             border-radius: 4px;
             cursor: pointer;
         }
-        .admin-btn:active {
-            background-color: #e0a800;
-        }
         .clear-container {
             margin-top: 50px;
         }
@@ -242,7 +267,7 @@
         <button class="hard-reset-btn" onclick="hardReset()">完全初期化</button>
     </div>
     
-    <div class="status-box">
+    <div class="status-box" id="status-box">
         <div id="enemy-name" class="enemy-name">スライムが現れた！</div>
         <div class="hp-bar-container">
             <div id="hp-bar" class="hp-bar"></div>
@@ -404,6 +429,7 @@
         const skillInventoryListEl = document.getElementById('skill-inventory-list');
         const activeBuffTextEl = document.getElementById('active-buff-text');
         const adminPanelEl = document.getElementById('admin-panel');
+        const statusBoxEl = document.getElementById('status-box');
         const body = document.body;
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -450,23 +476,22 @@
         }
 
         function getCurrentEnemyInfo(remaining) {
-            if (remaining === 950) return { name: "【ボス】ダウナー", hp: 18000, isDragon: false, isBoss: true }; // 6倍
-            if (remaining === 900) return { name: "【ボス】ダンビル", hp: 32000, isDragon: false, isBoss: true }; // 4倍
-            if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: 50000, isDragon: false, isBoss: true }; // 2.5倍
-            if (remaining === 600) return { name: "【ボス】ロメンテヤシ", hp: 120000, isDragon: false, isBoss: true }; // 2倍
-            if (remaining === 500) return { name: "【ボス】ソクラゼウス", hp: 150000, isDragon: false, isBoss: true }; // そのまま
-            if (remaining === 350) return { name: "【ボス】ダウナー EX", hp: 400000, isDragon: false, isBoss: true };
-            if (remaining === 100) return { name: "【ボス】終焉の支配者", hp: 1200000, isDragon: false, isBoss: true };
-            if (remaining === 50)  return { name: "【ボス】ラストビュオス", hp: 3500000, isDragon: false, isBoss: true };
-            if (remaining === 1)   return { name: "👑【ラスボス】そらまめ", hp: 10000000, isDragon: false, isBoss: true };
+            if (remaining === 950) return { name: "【ボス】ダウナー", hp: 18000, isBoss: true };
+            if (remaining === 900) return { name: "【ボス】ダンビル", hp: 32000, isBoss: true };
+            if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: 50000, isBoss: true };
+            if (remaining === 600) return { name: "【ボス】ロメンテヤシ", hp: 120000, isBoss: true };
+            if (remaining === 500) return { name: "【ボス】ソクラゼウス", hp: 150000, isBoss: true };
+            if (remaining === 350) return { name: "【ボス】ダウナー EX", hp: 400000, isBoss: true };
+            if (remaining === 100) return { name: "【ボス】終焉の支配者", hp: 1200000, isBoss: true };
+            if (remaining === 50)  return { name: "【ボス】ラストビュオス", hp: 3500000, isBoss: true };
+            if (remaining === 1)   return { name: "👑【ラスボス】そらまめ", hp: 10000000, isBoss: true };
 
             const index = gameData.defeatCount % normalEnemies.length;
             const baseEnemy = normalEnemies[index];
             const groupLevel = Math.floor(gameData.defeatCount / 5);
             const scaledHp = baseEnemy.hp + (groupLevel * 250);
-            const isDragon = (baseEnemy.name.includes("ドラゴン"));
 
-            return { name: baseEnemy.name, hp: scaledHp, isDragon: isDragon, isBoss: false };
+            return { name: baseEnemy.name, hp: scaledHp, isBoss: false };
         }
 
         function calculateTotalAttack() {
@@ -506,6 +531,18 @@
             }
 
             return Math.floor(base * multiplier);
+        }
+
+        function showCritEffect(text) {
+            statusBoxEl.classList.remove('screen-shake');
+            void statusBoxEl.offsetWidth; // reflow
+            statusBoxEl.classList.add('screen-shake');
+
+            const popup = document.createElement('div');
+            popup.className = 'crit-popup';
+            popup.textContent = text;
+            document.body.appendChild(popup);
+            setTimeout(() => popup.remove(), 500);
         }
 
         function rollSkillDrop() {
@@ -845,8 +882,13 @@
 
             gameData.equippedSkills.forEach((skill) => {
                 if (!skill) return;
-                if (skill.name === "クリティカル" && Math.random() < 0.10) currentAttack *= 2;
-                if (skill.name === "極クリティカル" && Math.random() < 0.01) currentAttack *= 6;
+                if (skill.name === "極クリティカル" && Math.random() < 0.01) {
+                    currentAttack *= 6;
+                    showCritEffect("⚡ 極大クリティカル！ ⚡");
+                } else if (skill.name === "クリティカル" && Math.random() < 0.10) {
+                    currentAttack *= 2;
+                    showCritEffect("💥 会心の一撃！ 💥");
+                }
             });
 
             gameData.enemyHp -= currentAttack;
