@@ -237,7 +237,7 @@
     
     <button id="attack-button">攻撃！</button>
 
-    <!-- 管理者専用パネル（ブラウザにフラグがある人のみ表示） -->
+    <!-- 管理者専用パネル（URLに ?soramame_admin=true がある人のみ表示） -->
     <div class="section-box admin-panel" id="admin-panel">
         <h3>⚙️ 管理者パネル</h3>
         <div class="button-row" style="margin-bottom: 5px;">
@@ -382,8 +382,9 @@
         const adminPanelEl = document.getElementById('admin-panel');
         const body = document.body;
 
-        // 管理者モードのチェック
-        if (localStorage.getItem('soramame_admin') === 'true') {
+        // URLパラメータのチェック（?soramame_admin=true がついている場合のみ管理者パネルを表示）
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('soramame_admin') === 'true') {
             adminPanelEl.style.display = 'block';
         }
 
