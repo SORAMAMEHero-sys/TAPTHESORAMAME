@@ -496,7 +496,7 @@
     </div>
 
     <script>
-        const SAVE_KEY = 'soramame_save_v13';
+        const SAVE_KEY = 'soramame_save_v11';
 
         let gameData = {
             enemiesRemaining: 1000,
@@ -533,108 +533,18 @@
             { name: "ドラゴン", hp: 250, icon: "🐉" }
         ];
 
-        // 1000体完全構築の裏ステージリスト生成
         const trueStageEnemies = [];
         const baseTrueList = [
             { name: "スクイーズ", hp: 10000000, icon: "🟢", isBoss: true },
             { name: "ハイオーク", hp: 15000000, icon: "🐗", isBoss: true },
             { name: "ペガサス", hp: 20000000, icon: "🦄", isBoss: true },
             { name: "グリフィン", hp: 30000000, icon: "🦁", isBoss: true },
-            { name: "ヒドラドラゴン", hp: 50000000, icon: "🐉", isBoss: true },
-            { name: "ダークファントム", hp: 75000000, icon: "👻", isBoss: true },
-            { name: "アビスゴーレム", hp: 100000000, icon: "🗿", isBoss: true },
-            { name: "カオスキマイラ", hp: 150000000, icon: "🐾", isBoss: true },
-            { name: "ファントムロード", hp: 200000000, icon: "🔮", isBoss: true },
-            { name: "ヴォイドタイタン", hp: 300000000, icon: "🌌", isBoss: true }
+            { name: "ヒドラドラゴン", hp: 50000000, icon: "🐉", isBoss: true }
         ];
-
-        const loopPattern10 = [];
-        for (let i = 0; i < 10; i++) {
-            loopPattern10.push({ ...baseTrueList[i % baseTrueList.length] });
+        for (let i = 0; i < 5; i++) {
+            baseTrueList.forEach(e => trueStageEnemies.push({ ...e }));
         }
-
-        const rotationCycle3 = [
-            { name: "ヒドラドラゴン", hp: 50000000, icon: "🐉", isBoss: true },
-            { name: "ラ・グランデボスズ", hp: 1000000000, icon: "👑", isBoss: true, isGrandBoss: true },
-            { name: "闇の魔人", hp: 300000000, icon: "🖤", isBoss: true }
-        ];
-
-        const rotationCycle4 = [
-            { name: "ラ・グランデボスズ", hp: 1000000000, icon: "👑", isBoss: true, isGrandBoss: true },
-            { name: "闇の魔人", hp: 300000000, icon: "🖤", isBoss: true },
-            { name: "カポエリ＝スエット", hp: 500000000, icon: "🛡️", isBoss: true },
-            { name: "リアス＝アクア", hp: 750000000, icon: "💧", isBoss: true }
-        ];
-
-        // 1～99体 (スクイーズ～ヒドラドラゴン等を99体分)
-        for (let i = 0; i < 99; i++) {
-            trueStageEnemies.push({ ...baseTrueList[i % baseTrueList.length] });
-        }
-
-        // 100体目: ラ・グランデボスズ
-        trueStageEnemies.push({ name: "ラ・グランデボスズ", hp: 1000000000, icon: "👑", isBoss: true, isGrandBoss: true });
-
-        // 101～299体 (スクイーズ～ヒドラドラゴン)
-        for (let i = 100; i < 299; i++) {
-            trueStageEnemies.push({ ...baseTrueList[i % baseTrueList.length] });
-        }
-
-        // 300体目: 闇の魔人 (3億)
-        trueStageEnemies.push({ name: "闇の魔人", hp: 300000000, icon: "🖤", isBoss: true });
-
-        // 301～499体 (スクイーズ～ヒドラドラゴン)
-        for (let i = 300; i < 499; i++) {
-            trueStageEnemies.push({ ...baseTrueList[i % baseTrueList.length] });
-        }
-
-        // 500体目: オンネン＝イカリ
-        trueStageEnemies.push({ name: "オンネン＝イカリ", hp: 400000000, icon: "🔥", isBoss: true });
-
-        // 501～749体 (ヒドラドラゴン→ラ・グランデボスズ→闇の魔人のループ)
-        let idx501 = 0;
-        for (let i = 500; i < 749; i++) {
-            trueStageEnemies.push({ ...rotationCycle3[idx501 % rotationCycle3.length] });
-            idx501++;
-        }
-
-        // 750体目: カポエリ＝スエット (5億)
-        trueStageEnemies.push({ name: "カポエリ＝スエット", hp: 500000000, icon: "🛡️", isBoss: true });
-
-        // 751～799体 (ヒドラドラゴン→ラ・グランデボスズ→闇の魔人のループ)
-        for (let i = 750; i < 799; i++) {
-            trueStageEnemies.push({ ...rotationCycle3[idx501 % rotationCycle3.length] });
-            idx501++;
-        }
-
-        // 800体目: リアス＝アクア (7.5億)
-        trueStageEnemies.push({ name: "リアス＝アクア", hp: 750000000, icon: "💧", isBoss: true });
-
-        // 801～899体 (ヒドラドラゴン→ラ・グランデボスズ→闇の魔人のループ)
-        for (let i = 800; i < 899; i++) {
-            trueStageEnemies.push({ ...rotationCycle3[idx501 % rotationCycle3.length] });
-            idx501++;
-        }
-
-        // 900体目: ウォータ＝ピカルス (10億)
-        trueStageEnemies.push({ name: "ウォータ＝ピカルス", hp: 1000000000, icon: "🌊", isBoss: true });
-
-        // 901～990体 (ラ・グランデボスズ→闇の魔人→カポエリ→リアス)
-        let idx901 = 0;
-        for (let i = 900; i < 990; i++) {
-            trueStageEnemies.push({ ...rotationCycle4[idx901 % rotationCycle4.length] });
-            idx901++;
-        }
-
-        // 991体目: そらまめNEO (20億)
-        trueStageEnemies.push({ name: "そらまめNEO", hp: 2000000000, icon: "🌟", isBoss: true, isGrandBoss: true });
-
-        // 992～999体: ウォータ＝ピカルス
-        for (let i = 991; i < 999; i++) {
-            trueStageEnemies.push({ name: "ウォータ＝ピカルス", hp: 1000000000, icon: "🌊", isBoss: true });
-        }
-
-        // 1000体目: 魔王 (50億)
-        trueStageEnemies.push({ name: "魔王", hp: 5000000000, icon: "👑", isBoss: true, isGrandBoss: true });
+        trueStageEnemies.push({ name: "ラ・グランデボス", hp: 120000000, icon: "👑", isBoss: true, isGrandBoss: true });
 
         let gameStarted = false;
         const bgmNormal = document.getElementById('bgm-normal');
@@ -711,7 +621,7 @@
         };
 
         function getCoinReward(remaining) {
-            if (gameData.isTrueStageActive) return 1000;
+            if (gameData.isTrueStageActive) return 500;
             if (remaining > 950) return 1;
             if (remaining > 800) return 2;
             if (remaining > 700) return 3;
@@ -836,8 +746,8 @@
                 stopAllBgm();
                 body.innerHTML = `
                     <div class="clear-container">
-                        <h1>🌌 真・裏ステージ（1000体）完全制覇！ 🌌</h1>
-                        <p>おめでとう！全1000体の壮絶な試練をすべて突破し、世界に真の平和が訪れました！</p>
+                        <h1>🌌 真・裏ステージ完全制覇！ 🌌</h1>
+                        <p>おめでとう！すべての裏試練（全30体）を突破し、真の平和が訪れました！</p>
                         <button onclick="localStorage.clear(); location.reload();">最初から遊ぶ</button>
                     </div>
                 `;
@@ -848,7 +758,7 @@
                 stopAllBgm();
                 let nextActionText = "強くてニューゲーム！";
                 if (gameData.clearRounds >= 2 && gameData.isTrueStageUnlocked) {
-                    nextActionText = "🌌 真・裏ステージ（全1000体）へ挑む！";
+                    nextActionText = "🌌 裏ステージ（全30体）へ挑む！";
                 }
 
                 body.innerHTML = `
@@ -1195,7 +1105,7 @@
 
         window.resetForNewGame = function() {
             if (gameData.clearRounds >= 2 && gameData.isTrueStageUnlocked && !gameData.isTrueStageActive) {
-                if (!confirm("【真・裏ステージ突入】\nこれより強さを引き継いだまま、全1000体の真・裏ステージへ挑戦しますか？")) return;
+                if (!confirm("【裏ステージ突入】\nこれより強さを引き継いだまま、全30体の真の裏ステージへ挑戦しますか？")) return;
                 gameData.isTrueStageActive = true;
                 gameData.trueStageProgress = 0;
                 const firstE = getCurrentEnemyInfo();
