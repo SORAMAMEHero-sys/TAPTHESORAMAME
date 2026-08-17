@@ -36,7 +36,7 @@
             animation: popUpText 0.5s ease-out forwards;
         }
 
-        /* 画像ボス用スタイル */
+        /* 画像ボス用スタイル共通 */
         .boss-img-container {
             width: 80px;
             height: 80px;
@@ -351,6 +351,10 @@
         <div class="boss-img-container" id="downer-img-container">
             <img src="IMG_2287.png" alt="ダウナー">
         </div>
+        <!-- ダンビル専用画像表示エリア -->
+        <div class="boss-img-container" id="danville-img-container">
+            <img src="IMG_2288.png" alt="ダンビル">
+        </div>
         <!-- その他のボス用アバター -->
         <div class="boss-avatar" id="boss-avatar">
             <div class="boss-horn left"></div>
@@ -467,7 +471,7 @@
     </div>
 
     <script>
-        const SAVE_KEY = 'soramame_save_v9';
+        const SAVE_KEY = 'soramame_save_v10';
 
         let gameData = {
             enemiesRemaining: 1000,
@@ -524,6 +528,7 @@
         const adminPanelEl = document.getElementById('admin-panel');
         const statusBoxEl = document.getElementById('status-box');
         const downerImgContainer = document.getElementById('downer-img-container');
+        const danvilleImgContainer = document.getElementById('danville-img-container');
         const bossAvatarEl = document.getElementById('boss-avatar');
         const normalIconEl = document.getElementById('normal-icon');
         const body = document.body;
@@ -573,7 +578,7 @@
 
         function getCurrentEnemyInfo(remaining) {
             if (remaining === 950) return { name: "【ボス】ダウナー", hp: 18000, isBoss: true, isDowner: true };
-            if (remaining === 900) return { name: "【ボス】ダンビル", hp: 32000, isBoss: true };
+            if (remaining === 900) return { name: "【ボス】ダンビル", hp: 32000, isBoss: true, isDanville: true };
             if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: 50000, isBoss: true };
             if (remaining === 600) return { name: "【ボス】ロメンテヤシ", hp: 120000, isBoss: true };
             if (remaining === 500) return { name: "【ボス】ソクラゼウス", hp: 150000, isBoss: true };
@@ -684,17 +689,25 @@
             const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
             enemyNameEl.textContent = `${currentEnemy.name} を攻撃！`;
 
-            // 見た目の切り替え（ダウナー画像、その他のボス、通常敵）
+            // 見た目の切り替え（ダウナー画像、ダンビル画像、その他のボス、通常敵）
             if (currentEnemy.isDowner) {
                 downerImgContainer.classList.add('show');
+                danvilleImgContainer.classList.remove('show');
+                bossAvatarEl.classList.remove('show');
+                normalIconEl.style.display = 'none';
+            } else if (currentEnemy.isDanville) {
+                downerImgContainer.classList.remove('show');
+                danvilleImgContainer.classList.add('show');
                 bossAvatarEl.classList.remove('show');
                 normalIconEl.style.display = 'none';
             } else if (currentEnemy.isBoss) {
                 downerImgContainer.classList.remove('show');
+                danvilleImgContainer.classList.remove('show');
                 bossAvatarEl.classList.add('show');
                 normalIconEl.style.display = 'none';
             } else {
                 downerImgContainer.classList.remove('show');
+                danvilleImgContainer.classList.remove('show');
                 bossAvatarEl.classList.remove('show');
                 normalIconEl.style.display = 'block';
                 normalIconEl.textContent = currentEnemy.icon;
