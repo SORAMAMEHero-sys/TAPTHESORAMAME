@@ -36,6 +36,63 @@
             animation: popUpText 0.5s ease-out forwards;
         }
 
+        /* ボスグラフィック用のコンテナ */
+        .boss-avatar {
+            width: 70px;
+            height: 70px;
+            margin: 0 auto 6px auto;
+            background: linear-gradient(135deg, #2c3e50, #000000);
+            border: 3px solid #e74c3c;
+            border-radius: 12px;
+            position: relative;
+            box-shadow: 0 0 12px rgba(231, 76, 60, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: bossFloat 2s ease-in-out infinite;
+        }
+        .boss-avatar.show {
+            display: flex;
+        }
+        @keyframes bossFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
+        }
+        .boss-eye {
+            width: 12px;
+            height: 7px;
+            background-color: #ffeb3b;
+            border-radius: 50%;
+            position: absolute;
+            top: 22px;
+            box-shadow: 0 0 6px #ff5722;
+            animation: bossGlow 1s ease-in-out infinite alternate;
+        }
+        .boss-eye.left { left: 16px; }
+        .boss-eye.right { right: 16px; }
+        @keyframes bossGlow {
+            from { opacity: 0.6; transform: scale(1); }
+            to { opacity: 1; transform: scale(1.1); }
+        }
+        .boss-horn {
+            position: absolute;
+            top: -9px;
+            width: 0;
+            height: 0;
+            border-left: 7px solid transparent;
+            border-right: 7px solid transparent;
+            border-bottom: 13px solid #e74c3c;
+        }
+        .boss-horn.left { left: 12px; transform: rotate(-15deg); }
+        .boss-horn.right { right: 12px; transform: rotate(15deg); }
+
+        /* 通常敵用アイコン */
+        .normal-icon {
+            font-size: 2.2rem;
+            margin-bottom: 2px;
+            display: block;
+        }
+
         body {
             font-family: sans-serif;
             text-align: center;
@@ -268,6 +325,16 @@
     </div>
     
     <div class="status-box" id="status-box">
+        <!-- ボス用アバター -->
+        <div class="boss-avatar" id="boss-avatar">
+            <div class="boss-horn left"></div>
+            <div class="boss-horn right"></div>
+            <div class="boss-eye left"></div>
+            <div class="boss-eye right"></div>
+        </div>
+        <!-- 通常敵用アイコン -->
+        <div class="normal-icon" id="normal-icon">🟢</div>
+
         <div id="enemy-name" class="enemy-name">スライムが現れた！</div>
         <div class="hp-bar-container">
             <div id="hp-bar" class="hp-bar"></div>
@@ -399,11 +466,11 @@
         const COOLDOWN_TIME = 15 * 60 * 1000;
 
         const normalEnemies = [
-            { name: "スライム", hp: 10 },
-            { name: "ゴブリン", hp: 25 },
-            { name: "オオカミ", hp: 50 },
-            { name: "魔物のおおきい鳥", hp: 100 },
-            { name: "ドラゴン", hp: 250 }
+            { name: "スライム", hp: 10, icon: "🟢" },
+            { name: "ゴブリン", hp: 25, icon: "👺" },
+            { name: "オオカミ", hp: 50, icon: "🐺" },
+            { name: "魔物のおおきい鳥", hp: 100, icon: "🦅" },
+            { name: "ドラゴン", hp: 250, icon: "🐉" }
         ];
 
         const enemyNameEl = document.getElementById('enemy-name');
@@ -430,6 +497,8 @@
         const activeBuffTextEl = document.getElementById('active-buff-text');
         const adminPanelEl = document.getElementById('admin-panel');
         const statusBoxEl = document.getElementById('status-box');
+        const bossAvatarEl = document.getElementById('boss-avatar');
+        const normalIconEl = document.getElementById('normal-icon');
         const body = document.body;
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -491,7 +560,7 @@
             const groupLevel = Math.floor(gameData.defeatCount / 5);
             const scaledHp = baseEnemy.hp + (groupLevel * 250);
 
-            return { name: baseEnemy.name, hp: scaledHp, isBoss: false };
+            return { name: baseEnemy.name, hp: scaledHp, icon: baseEnemy.icon, isBoss: false };
         }
 
         function calculateTotalAttack() {
@@ -535,7 +604,7 @@
 
         function showCritEffect(text) {
             statusBoxEl.classList.remove('screen-shake');
-            void statusBoxEl.offsetWidth; // reflow
+            void statusBoxEl.offsetWidth;
             statusBoxEl.classList.add('screen-shake');
 
             const popup = document.createElement('div');
@@ -587,6 +656,16 @@
 
             const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
             enemyNameEl.textContent = `${currentEnemy.name} を攻撃！`;
+
+            // 見た目の切り替え（ボスか通常敵か）
+            if (currentEnemy.isBoss) {
+                bossAvatarEl.classList.add('show');
+                normalIconEl.style.display = 'none';
+            } else {
+                bossAvatarEl.classList.remove('show');
+                normalIconEl.style.display = 'block';
+                normalIconEl.textContent = currentEnemy.icon;
+            }
 
             if (!gameData.enemyMaxHp || gameData.enemyMaxHp <= 0) {
                 gameData.enemyMaxHp = currentEnemy.hp;
