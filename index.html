@@ -1,10 +1,4 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>進め！そらまめ軍団</title>
-    <style>
+
         @keyframes shake {
             0% { transform: translate(0, 0) rotate(0deg); }
             20% { transform: translate(-6px, 4px) rotate(-1deg); }
@@ -17,7 +11,6 @@
             animation: shake 0.2s ease-in-out;
         }
 
-        /* 敵の突進アニメーション（しゅっと移動） */
         @keyframes enemyRush {
             0% { transform: translateY(0) scale(1); }
             30% { transform: translateY(30px) scale(1.1); filter: drop-shadow(0 0 10px red); }
@@ -47,7 +40,6 @@
             animation: popUpText 0.5s ease-out forwards;
         }
 
-        /* スタート画面用オーバーレイ */
         #start-screen {
             position: fixed;
             top: 0;
@@ -114,7 +106,6 @@
             background-color: #117a8b;
         }
 
-        /* 遊び方モーダルのスタイル */
         .howto-content {
             line-height: 1.6;
             color: #333;
@@ -138,7 +129,6 @@
             white-space: pre-wrap;
         }
 
-        /* モーダルウィンドウ共通 */
         .modal {
             display: none;
             position: fixed;
@@ -164,7 +154,6 @@
             color: #333;
         }
 
-        /* 敵コンテナ（複数対応用横並び） */
         .enemies-container {
             display: flex;
             justify-content: center;
@@ -186,7 +175,6 @@
             background: #fff5f2;
         }
 
-        /* 通常ボスグラフィック用のコンテナ */
         .boss-avatar {
             width: 60px;
             height: 60px;
@@ -236,7 +224,6 @@
         .boss-horn.left { left: 10px; transform: rotate(-15deg); }
         .boss-horn.right { right: 10px; transform: rotate(15deg); }
 
-        /* 通常敵用アイコン */
         .normal-icon {
             font-size: 2rem;
             margin-bottom: 2px;
@@ -255,7 +242,6 @@
             color: #333;
         }
 
-        /* 最高討伐数に応じた背景スタイルと文字色の補正 */
         body.bg-green { background-color: #2e7d32 !important; color: #fff; }
         body.bg-blue { background-color: #1565c0 !important; color: #fff; }
         body.bg-red { background-color: #c62828 !important; color: #fff; }
@@ -343,7 +329,6 @@
             font-weight: bold;
         }
 
-        /* 見やすさ改善：ステータスパネルをカード状にして背景と同化するのを防止 */
         .info-panel {
             font-size: 0.9rem;
             margin: 0 auto 10px auto;
@@ -482,7 +467,7 @@
             background: #343a40;
             color: white;
             border: 2px dashed #ffc107;
-            display: none; /* デフォルトは非表示 */
+            display: none;
         }
         .admin-panel h3 {
             color: #ffc107;
@@ -510,278 +495,265 @@
             cursor: pointer;
             margin-top: 20px;
         }
-    </style>
-</head>
-<body>
-
-    <!-- 音声ファイル設定 (Soramame/破壊神用の新BGMを追加) -->
-    <audio id="bgm-normal" loop src="https://alca-media.s3.ap-northeast-1.amazonaws.com/assets/bgm.mp3"></audio>
-    <audio id="bgm-boss" loop src="https://alca-media.s3.ap-northeast-1.amazonaws.com/assets/boss.mp3"></audio>
-    <audio id="bgm-soramame" loop src="soramame.mp3"></audio>
-
-    <!-- スタート画面 -->
-    <div id="start-screen">
-        <h1>進め！そらまめ軍団</h1>
-        <p>魔物を討伐して世界を救おう！</p>
-        <div class="start-btn-group">
-            <button id="game-start-btn">ゲームを開始</button>
-            <button id="how-to-btn">遊び方</button>
-        </div>
-    </div>
-
-    <!-- 遊び方 modal -->
-    <div id="howto-modal" class="modal">
-        <div class="modal-content howto-content">
-            <h3>📖 遊び方</h3>
-            <p>こんにちは！そらまめゲームズです！</p>
-            <div class="howto-section">
-                <h4>1. 攻撃</h4>
-                <p>このゲームはクリックゲームです！「攻撃！」ボタンで攻撃できますレベル・装備を強化することで攻撃力を上げれます！</p>
-            </div>
-            <div class="howto-section">
-                <h4>2. レベル</h4>
-                <p>敵を倒してコインを貯めて力・耐・避の3要素を強化！レベルを上げるならリスタートでリセットしまくろう</p>
-            </div>
-            <div class="howto-section">
-                <h4>3. リスタート・スキル</h4>
-                <p>リスタートはステージの進行具合をリセットしますぅ！これでコインを集めてじっくり進めていきましょースキルはリスタートで消えますスキルはボスを倒すとランダムに貰うことができます！効果は秘密🤫</p>
-            </div>
-            <p>まあこのゲームを楽しんで！</p>
-            <div style="text-align: center; margin-top: 15px;">
-                <button class="action-btn" onclick="closeHowToModal()">閉じる</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ショップモーダル -->
-    <div id="shop-modal" class="modal">
-        <div class="modal-content">
-            <h3>🛒 ショップ (ルビー決済)</h3>
-            <div id="shop-item-list"></div>
-            <div style="text-align: center; margin-top: 15px;">
-                <button class="action-btn" onclick="closeShopModal()">閉じる</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 魔法モーダル -->
-    <div id="magic-modal" class="modal">
-        <div class="modal-content">
-            <h3>✨ 魔法メニュー</h3>
-            <p style="text-align: center; font-size: 0.85rem;">
-                所持MP: <span id="modal-mp-text">0</span> / <span id="modal-max-mp-text">0</span>
-            </p>
-            <div style="display: flex; flex-direction: column; gap: 8px;">
-                <button class="action-btn" onclick="castMagic('fire')">
-                    🔥 ファイヤ (火)<br>詠唱 (3MP)<br>
-                    <small>通常: 単体に135ダメージ / 裏: 75万ダメージ</small>
-                </button>
-                <button class="action-btn" onclick="castMagic('ice')">
-                    ❄️ アイス (氷)<br>詠唱 (3MP)<br>
-                    <small>通常: 単体に135ダメージ / 裏: 75万ダメージ</small>
-                </button>
-                <button class="action-btn" onclick="castMagic('wind')">
-                    🌪️ 扇子アタック (風)<br>詠唱 (5MP)<br>
-                    <small>通常: 全体に70ダメージ / 裏: 45万ダメージ</small>
-                </button>
-            </div>
-            <div style="text-align: center; margin-top: 15px;">
-                <button class="action-btn" onclick="closeMagicModal()">閉じる</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 管理者: 敵改造モーダル -->
-    <div id="enemy-custom-modal" class="modal">
-        <div class="modal-content">
-            <h3>👹 敵の改造</h3>
-            <label style="font-size:0.8rem;">名前: <input type="text" id="edit-enemy-name" style="width:100%; margin-bottom:5px;"></label><br>
-            <label style="font-size:0.8rem;">絵文字: <input type="text" id="edit-enemy-icon" style="width:100%; margin-bottom:5px;"></label><br>
-            <label style="font-size:0.8rem;">体力 (HP): <input type="number" id="edit-enemy-hp" style="width:100%; margin-bottom:5px;"></label><br>
-            <label style="font-size:0.8rem;">攻撃力: <input type="number" id="edit-enemy-atk" style="width:100%; margin-bottom:5px;"></label><br>
-            <label style="font-size:0.8rem;">出現数 (1体 or 2体): <input type="number" id="edit-enemy-count" min="1" max="2" style="width:100%; margin-bottom:10px;"></label><br>
-            <div style="text-align: center;">
-                <button class="action-btn" onclick="applyEnemyCustom()">適用する</button>
-                <button class="action-btn" onclick="closeEnemyCustomModal()" style="background:#6c757d;">閉じる</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 管理者: ガチャ確率改造モーダル -->
-    <div id="gacha-custom-modal" class="modal">
-        <div class="modal-content">
-            <h3>🎯 ガチャ確率改造</h3>
-            <label style="font-size:0.8rem;">最高レア（伝説の剣・エナドリ）の排出確率(%):<br>
-            <input type="number" id="edit-gacha-rate" style="width:100%; margin-top:5px; margin-bottom:10px;" value="5"></label><br>
-            <div style="text-align: center;">
-                <button class="action-btn" onclick="applyGachaCustom()">適用する</button>
-                <button class="action-btn" onclick="closeGachaCustomModal()" style="background:#6c757d;">閉じる</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 管理者: オリジナルスキル作成モーダル -->
-    <div id="skill-create-modal" class="modal">
-        <div class="modal-content">
-            <h3>✨ オリジナルスキル作成</h3>
-            <label style="font-size:0.8rem;">スキル名: <input type="text" id="custom-skill-name" style="width:100%; margin-bottom:5px;"></label><br>
-            <label style="font-size:0.8rem;">スキルタイプ:
-                <select id="custom-skill-type" style="width:100%; margin-bottom:5px;">
-                    <option value="turret">タレット (自動攻撃)</option>
-                    <option value="crit">クリティカル (確率倍率ダメージ)</option>
-                    <option value="killer">〇〇キラー (特効ダメージ)</option>
-                    <option value="fever">〇〇フィーバー (報酬アップなど)</option>
-                </select>
-            </label><br>
-            <label style="font-size:0.8rem;">パラメータ1（発動間隔秒 or 確率%など）: <input type="number" id="custom-skill-p1" style="width:100%; margin-bottom:5px;"></label><br>
-            <label style="font-size:0.8rem;">パラメータ2（倍率や対象キーワードなど）: <input type="text" id="custom-skill-p2" style="width:100%; margin-bottom:5px;"></label><br>
-            <label style="font-size:0.8rem;">説明文: <input type="text" id="custom-skill-desc" style="width:100%; margin-bottom:10px;"></label><br>
-            <div style="text-align: center;">
-                <button class="action-btn" onclick="createCustomSkill()">スキルを作成して追加</button>
-                <button class="action-btn" onclick="closeSkillCreateModal()" style="background:#6c757d;">閉じる</button>
-            </div>
-        </div>
-    </div>
-
-    <h1>進め！そらまめ軍団</h1>
-    <div class="header-area">
-        <p class="author">作者: そらまめゲームズ & Gemini</p>
-        <button class="hard-reset-btn" onclick="hardResetData()">完全初期化</button>
-    </div>
     
-    <!-- 敵とプレイヤーのステータス表示領域 -->
-    <div class="status-box" id="status-box">
-        <div class="enemies-container" id="enemies-container">
-            <!-- 動的に敵ユニットが生成されます -->
-        </div>
 
-        <div class="player-status-area">
-            ❤️ HP: <span id="player-hp">30</span>/<span id="player-max-hp">30</span> | 
-            💙 MP: <span id="player-mp">10</span>/<span id="player-max-mp">10</span><br>
-            ⚔️ 攻撃: <span id="player-atk">1</span> | 💨 回避: <span id="player-eva">5</span>%
-        </div>
-    </div>
 
-    <!-- ゲーム情報の表示エリア -->
-    <div class="info-panel">
-        <span id="mode-title-label">残り敵数:</span> <span id="remaining-count">1000</span>体<br>
-        <span class="max-record">(歴代最高到達数: <span id="max-defeat-count">0</span>体) | 周回数: <span id="clear-round-count">0</span>周クリア</span><br>
-        🪙 コイン: <span id="coin-count">0</span>枚 | 💎 ルビー: <span id="ruby-count">0</span>個 | 🔮 魔法石: <span id="magic-stone-count">0</span>個<br>
-        総攻撃力: <span id="total-attack-power">1</span>
-    </div>
+
     
-    <button id="attack-button">攻撃！</button>
+    
+    
 
-    <!-- 管理者パネル -->
-    <div class="section-box admin-panel" id="admin-panel">
-        <h3>⚙️ 管理者パネル</h3>
-        <div class="button-row" style="margin-bottom: 5px;">
-            <button class="admin-btn" onclick="adminAddCoins()">🪙 コイン無限</button>
-            <button class="admin-btn" onclick="adminAddRubies()">💎 ルビー無限</button>
-            <button class="admin-btn" onclick="adminAddStones()">🔮 魔法石+10</button>
-            <button class="admin-btn" onclick="adminKillEnemy()">💥 敵を一撃撃破</button>
-        </div>
-        <div class="button-row" style="margin-bottom: 5px;">
-            <button class="admin-btn" onclick="adminSkip100()">⏩ 残り-100体</button>
-            <button class="admin-btn" onclick="adminUnlockAllSkills()">✨ 全スキル獲得</button>
-        </div>
-        <div class="button-row" style="margin-bottom: 5px;">
-            <button class="admin-btn" onclick="openEnemyCustomModal()">👹 敵の改造</button>
-            <button class="admin-btn" onclick="adminFreeLevelUp()">⚡ レベル無料UP</button>
-            <button class="admin-btn" onclick="openGachaCustomModal()">🎯 ガチャ確率改造</button>
-        </div>
-        <div class="button-row">
-            <button class="admin-btn" onclick="openSkillCreateModal()">✨ オリジナルスキル作成</button>
-        </div>
-    </div>
+    
+        進め！そらまめ軍団
+        魔物を討伐して世界を救おう！
+        
+            ゲームを開始
+            遊び方
+        
+    
 
-    <!-- メニューボタン -->
-    <div class="menu-buttons">
-        <div class="button-row">
-            <button class="action-btn" id="upgrade-button">レベルアップ (Lv.<span id="player-level">1</span>) (🪙<span id="upgrade-cost">3</span>)</button>
-            <button class="action-btn" id="restart-button" style="background-color: #dc3545;">リスタート</button>
-        </div>
-        <div class="button-row">
-            <button class="action-btn" id="stop-button" style="background-color: #ffc107; color: #000;">⏸️ Stop (ON/OFF)</button>
-            <button class="action-btn" id="shop-button" style="display:none; background-color: #28a745;">🛒 SHOP</button>
-            <button class="action-btn" id="magic-button" style="background-color: #6f42c1;">✨ 魔法</button>
-        </div>
-        <div class="button-row">
-            <button class="action-btn" id="gacha-1-button" style="background-color: #e83e8c;">ガチャ1回 (💎10)</button>
-            <button class="action-btn" id="gacha-10-button" style="background-color: #fd7e14;">ガチャ10連 (💎100)</button>
-        </div>
-        <div class="button-row">
-            <button class="action-btn" id="ruby-exchange-button" style="background-color: #20c997;">ルビー交換 (🪙<span id="exchange-cost">6</span>)</button>
-            <button class="action-btn" id="rate-button" style="background-color: #6c757d;">確率一覧</button>
-            <button class="action-btn" id="bgm-toggle-button" style="background-color: #17a2b8;">🎵 BGM: ON</button>
-        </div>
-        <div class="button-row">
-            <button class="action-btn" id="skip-cooldown-button" style="background-color: #ff9800; display: inline-block;">CDスキップ (🪙<span id="skip-cost">0</span>)</button>
-        </div>
-    </div>
+    
+        
+            📖 遊び方
+            こんにちは！そらまめゲームズです！
+            
+                1. 攻撃
+                このゲームはクリックゲームです！「攻撃！」ボタンで攻撃できますレベル・装備を強化することで攻撃力を上げれます！
+            
+            
+                2. レベル
+                敵を倒してコインを貯めて力・耐・避の3要素を強化！レベルを上げるならリスタートでリセットしまくろう
+            
+            
+                3. リスタート・スキル
+                リスタートはステージの進行具合をリセットしますぅ！これでコインを集めてじっくり進めていきましょースキルはリスタートで消えますスキルはボスを倒すとランダムに貰うことができます！効果は秘密🤫
+            
+            まあこのゲームを楽しんで！
+            
+                閉じる
+            
+        
+    
 
-    <!-- 装備枠 -->
-    <div class="section-box">
-        <h3>⚔️ 装備スロット (最大3つ)</h3>
-        <div class="slot-container">
-            <div class="slot" id="equip-slot-0">
-                <span>[剣枠]</span>
-                <span id="slot-0-name">なし</span>
-                <button onclick="unequipItem(0)" style="font-size:0.6rem; margin-top:2px;">外す</button>
-            </div>
-            <div class="slot" id="equip-slot-1">
-                <span>[アイテム1]</span>
-                <span id="slot-1-name">なし</span>
-                <button onclick="unequipItem(1)" style="font-size:0.6rem; margin-top:2px;">外す</button>
-            </div>
-            <div class="slot" id="equip-slot-2">
-                <span>[アイテム2]</span>
-                <span id="slot-2-name">なし</span>
-                <button onclick="unequipItem(2)" style="font-size:0.6rem; margin-top:2px;">外す</button>
-            </div>
-        </div>
-    </div>
+    
+        
+            🛒 ショップ (ルビー決済)
+            
+            
+                閉じる
+            
+        
+    
 
-    <!-- スキルスロット -->
-    <div class="section-box">
-        <h3>✨ スキルスロット (最大3つ)</h3>
-        <div class="slot-container">
-            <div class="slot" id="skill-slot-0">
-                <span>[枠1]</span>
-                <span id="skill-0-name">なし</span>
-                <button onclick="unequipSkill(0)" style="font-size:0.6rem; margin-top:2px;">外す</button>
-            </div>
-            <div class="slot" id="skill-slot-1">
-                <span>[枠2]</span>
-                <span id="skill-1-name">なし</span>
-                <button onclick="unequipSkill(1)" style="font-size:0.6rem; margin-top:2px;">外す</button>
-            </div>
-            <div class="slot" id="skill-slot-2">
-                <span>[枠3]</span>
-                <span id="skill-2-name">なし</span>
-                <button onclick="unequipSkill(2)" style="font-size:0.6rem; margin-top:2px;">外す</button>
-            </div>
-        </div>
-    </div>
+    
+        
+            ✨ 魔法メニュー
+            
+                所持MP: 0 / 0
+            
+            
+                
+                    🔥 ファイヤ (火)詠唱 (3MP)
+                    通常: 単体に135ダメージ / 裏: 75万ダメージ
+                
+                
+                    ❄️ アイス (氷)詠唱 (3MP)
+                    通常: 単体に135ダメージ / 裏: 75万ダメージ
+                
+                
+                    🌪️ 扇子アタック (風)詠唱 (5MP)
+                    通常: 全体に70ダメージ / 裏: 45万ダメージ
+                
+            
+            
+                閉じる
+            
+        
+    
 
-    <!-- インベントリ (回復薬 & 未装備アイテム) -->
-    <div class="section-box">
-        <h3>🎒 所持アイテム一覧 (回復・消耗品)</h3>
-        <div class="inventory-list" id="inventory-list">
+    
+        
+            👹 敵の改造
+            名前: 
+            絵文字: 
+            体力 (HP): 
+            攻撃力: 
+            出現数 (1体 or 2体): 
+            
+                適用する
+                閉じる
+            
+        
+    
+
+    
+        
+            🎯 ガチャ確率改造
+            最高レア（伝説の剣・エナドリ）の排出確率(%):
+            
+            
+                適用する
+                閉じる
+            
+        
+    
+
+    
+        
+            ✨ オリジナルスキル作成
+            スキル名: 
+            スキルタイプ:
+                
+                    タレット (自動攻撃)
+                    クリティカル (確率倍率ダメージ)
+                    〇〇キラー (特効ダメージ)
+                    〇〇フィーバー (報酬アップなど)
+                
+            
+            パラメータ1（発動間隔秒 or 確率%など）: 
+            パラメータ2（倍率や対象キーワードなど）: 
+            説明文: 
+            
+                スキルを作成して追加
+                閉じる
+            
+        
+    
+
+    進め！そらまめ軍団
+    
+        作者: そらまめゲームズ & Gemini
+        完全初期化
+    
+    
+    
+        
+
+        
+            ❤️ HP: 30/30 | 
+            💙 MP: 10/10
+            ⚔️ 攻撃: 1 | 💨 回避: 5%
+        
+    
+
+    
+        残り敵数: 1000体
+        (歴代最高到達数: 0体) | 周回数: 0周クリア
+        🪙 コイン: 0枚 | 💎 ルビー: 0個 | 🔮 魔法石: 0個
+        総攻撃力: 1
+    
+    
+    攻撃！
+
+    
+        ⚙️ 管理者パネル
+        
+            🪙 コイン無限
+            💎 ルビー無限
+            🔮 魔法石+10
+            💥 敵を一撃撃破
+        
+        
+            ⏩ 残り-100体
+            ✨ 全スキル獲得
+        
+        
+            👹 敵の改造
+            ⚡ レベル無料UP
+            🎯 ガチャ確率改造
+        
+        
+            ✨ オリジナルスキル作成
+        
+    
+
+    
+        
+            レベルアップ (Lv.1) (🪙3)
+            リスタート
+        
+        
+            ⏸️ Stop (ON/OFF)
+            🛒 SHOP
+            ✨ 魔法
+        
+        
+            ガチャ1回 (💎10)
+            ガチャ10連 (💎100)
+        
+        
+            ルビー交換 (🪙6)
+            確率一覧
+            🎵 BGM: ON
+        
+        
+            CDスキップ (🪙0)
+        
+    
+
+    
+        ⚔️ 装備スロット (最大3つ)
+        
+            
+                [剣枠]
+                なし
+                外す
+            
+            
+                [アイテム1]
+                なし
+                外す
+            
+            
+                [アイテム2]
+                なし
+                外す
+            
+        
+    
+
+    
+        ✨ スキルスロット (最大3つ)
+        
+            
+                [枠1]
+                なし
+                外す
+            
+            
+                [枠2]
+                なし
+                外す
+            
+            
+                [枠3]
+                なし
+                外す
+            
+        
+    
+
+    
+        🎒 所持アイテム一覧 (回復・消耗品)
+        
             まだアイテムはありません
-        </div>
-    </div>
+        
+    
 
-    <!-- スキル一覧 -->
-    <div class="section-box">
-        <h3>📜 所持スキル一覧</h3>
-        <div class="inventory-list" id="skill-inventory-list">
+    
+        📜 所持スキル一覧
+        
             まだスキルはありません (ボス撃破で獲得！)
-        </div>
-    </div>
+        
+    
 
-    <script>
-        const SAVE_KEY = 'soramame_save_v19';
+    
+        const SAVE_KEY = 'soramame_save_v20';
+
+        const MAX_LEVEL = 1000;
+        const MAX_EVASION = 40;
+        const MAX_UPGRADE_COST = 3000000000;
+        const TRUE_STAGE_TOTAL = 200;
 
         let gameData = {
             enemiesRemaining: 1000,
@@ -840,7 +812,6 @@
             { name: "ドラゴン", hp: 250, icon: "🐉", atk: 2, eva: 10, element: "fire" }
         ];
 
-        const trueStageEnemies = [];
         const baseTrueList = [
             { name: "【裏】スクイーズ", hp: 10000000, icon: "🟢", isBoss: true, atk: 17, eva: 10, element: "fire" },
             { name: "【裏】ハイオーク", hp: 15000000, icon: "🐗", isBoss: true, atk: 17, eva: 10, element: "ice" },
@@ -849,100 +820,23 @@
             { name: "【裏】ヒドラドラゴン", hp: 50000000, icon: "🐉", isBoss: true, atk: 17, eva: 20, element: "ice" }
         ];
 
-        const secretBossData = {
-            100: { name: "ベヒモス", hp: 68000000 },
-            200: { name: "ニーズヘッグ", hp: 88000000 },
-            300: { name: "ガルーダ", hp: 128000000 },
-            400: { name: "エアラヴァータ", hp: 168000000 },
-            500: { name: "ゲンブ", hp: 208000000 },
-            600: { name: "リヴァイアサン", hp: 248000000 },
-            700: { name: "セイリュウ", hp: 288000000 },
-            800: { name: "スザク", hp: 328000000 },
-            900: { name: "ビャッコ", hp: 368000000 }
-        };
-
-        for (let i = 1; i <= 1000; i++) {
-            if (secretBossData[i]) {
-                const b = secretBossData[i];
-                trueStageEnemies.push({ name: `【裏ボス】${b.name}`, hp: b.hp, icon: "👹", isBoss: true, atk: 25, eva: 15, element: "none" });
-            } else if (i === 1000) {
-                trueStageEnemies.push({ name: "👑【裏ラスボス】そらまめの王", hp: 500000000, icon: "👑", isBoss: true, atk: 50, eva: 20, element: "fire" });
-            } else {
-                const base = baseTrueList[(i - 1) % baseTrueList.length];
-                trueStageEnemies.push({ ...base });
-            }
+        function makeTrueStageBoss(name, icon, hp, atkRate, eva = 15, element = "none") {
+            return {
+                name,
+                hp,
+                icon,
+                isBoss: true,
+                atk: Math.floor(hp * atkRate),
+                eva,
+                element
+            };
         }
 
-        let gameStarted = false;
+        function buildTrueStageEnemies() {
+            const list = [];
 
-        const bgmNormal = document.getElementById('bgm-normal');
-        const bgmBoss = document.getElementById('bgm-boss');
-        const bgmSoramame = document.getElementById('bgm-soramame');
-
-        const remainingCountEl = document.getElementById('remaining-count');
-        const maxDefeatCountEl = document.getElementById('max-defeat-count');
-        const clearRoundCountEl = document.getElementById('clear-round-count');
-        const coinCountEl = document.getElementById('coin-count');
-        const rubyCountEl = document.getElementById('ruby-count');
-        const magicStoneCountEl = document.getElementById('magic-stone-count');
-        const modeTitleLabelEl = document.getElementById('mode-title-label');
-
-        const playerHpEl = document.getElementById('player-hp');
-        const playerMaxHpEl = document.getElementById('player-max-hp');
-        const playerMpEl = document.getElementById('player-mp');
-        const playerMaxMpEl = document.getElementById('player-max-mp');
-        const playerAtkEl = document.getElementById('player-atk');
-        const playerEvaEl = document.getElementById('player-eva');
-        const playerLevelEl = document.getElementById('player-level');
-        const totalAttackPowerEl = document.getElementById('total-attack-power');
-        const upgradeCostEl = document.getElementById('upgrade-cost');
-        const exchangeCostEl = document.getElementById('exchange-cost');
-        const skipCostEl = document.getElementById('skip-cost');
-
-        const attackButton = document.getElementById('attack-button');
-        const upgradeButton = document.getElementById('upgrade-button');
-        const restartButton = document.getElementById('restart-button');
-        const stopButton = document.getElementById('stop-button');
-        const shopButton = document.getElementById('shop-button');
-        const magicButton = document.getElementById('magic-button');
-        const gacha1Btn = document.getElementById('gacha-1-button');
-        const gacha10Btn = document.getElementById('gacha-10-button');
-        const rubyExchangeBtn = document.getElementById('ruby-exchange-button');
-        const rateBtn = document.getElementById('rate-button');
-        const bgmToggleBtn = document.getElementById('bgm-toggle-button');
-        const skipCooldownBtn = document.getElementById('skip-cooldown-button');
-
-        const startScreenEl = document.getElementById('start-screen');
-        const gameStartBtn = document.getElementById('game-start-btn');
-        const howToBtn = document.getElementById('how-to-btn');
-        const howtoModal = document.getElementById('howto-modal');
-        const shopModal = document.getElementById('shop-modal');
-        const magicModal = document.getElementById('magic-modal');
-        const statusBoxEl = document.getElementById('status-box');
-        const enemiesContainerEl = document.getElementById('enemies-container');
-        const inventoryListEl = document.getElementById('inventory-list');
-        const skillInventoryListEl = document.getElementById('skill-inventory-list');
-
-        function stopAllBgm() {
-            bgmNormal.pause();
-            bgmBoss.pause();
-            bgmSoramame.pause();
-        }
-
-        function loadGame() {
-            const saved = localStorage.getItem(SAVE_KEY);
-            if (saved) {
-                try {
-                    const parsed = JSON.parse(saved);
-                    gameData = { ...gameData, ...parsed };
-                    if (!gameData.consumables) {
-                        gameData.consumables = {
-                            "薬草": 0, "安物の薬": 0, "一般的な薬": 0, "高級薬": 0,
-                            "3000年の歴史の薬": 0, "キャンディソーダ": 0, "凝縮砂糖水": 0
-                        };
-                    }
-                    if (gameData.bossKillCount === undefined) {
-                        gameData.bossKillCount = 0;
+            for (let i = 1; i  TRUE_STAGE_TOTAL) {
+                        gameData.trueStageProgress = TRUE_STAGE_TOTAL;
                     }
                 } catch (e) {
                     console.error("Save load failed", e);
@@ -979,7 +873,6 @@
             }
         }
 
-        /* 改変: 敵を撃破した際のコイン獲得数を最高討伐数にする */
         function getCoinReward(remaining) {
             return gameData.maxDefeatCount;
         }
@@ -1010,7 +903,7 @@
                 const groupLevel = Math.floor(gameData.defeatCount / 5);
 
                 const canSpawnCompanion = remaining > 1 && remaining !== 500;
-                if (canSpawnCompanion && Math.random() < 0.25 && gameData.defeatCount >= 2) {
+                if (canSpawnCompanion && Math.random() = 2) {
                     let scaledHp = Math.floor((baseEnemy.hp + (groupLevel * 250)) * multiplier) * 2;
                     let scaledAtk = Math.floor(baseEnemy.atk + Math.floor(groupLevel * 0.5)) * 2;
                     base = { name: "そらまめの戦士⚔️😈🛡", hp: scaledHp, icon: "⚔️", isBoss: false, atk: scaledAtk, eva: baseEnemy.eva, element: baseEnemy.element };
@@ -1101,42 +994,7 @@
                 return;
             }
 
-            if (Date.now() - gameData.lastBossSummonTime < summonInterval) return;
-
-            gameData.lastBossSummonTime = Date.now();
-
-            let minion = null;
-            if (boss.name === "👑【ラスボス】そらまめ") {
-                minion = createSummonedSoramameWarrior();
-            } else if (boss.name === "👌🗿破壊神") {
-                minion = createMoaiWall();
-            }
-
-            if (minion) {
-                gameData.activeEnemies.push(minion);
-                showCritEffect(`⚠️ ${boss.name}が【${minion.name}】を呼び寄せた！`);
-                saveGame();
-                updateScreen();
-            }
-        }
-
-        function spawnOrRefreshEnemies() {
-            if (!gameData.activeEnemies || gameData.activeEnemies.length === 0) {
-                const primary = generateSingleEnemyData();
-                if (primary) {
-                    gameData.activeEnemies = [primary];
-                } else {
-                    gameData.activeEnemies = [];
-                }
-            }
-        }
-
-        function calculateTotalAttack() {
-            let base = gameData.attackPower;
-            let multiplier = 1;
-
-            let isTargetMatched = false;
-            if (gameData.activeEnemies && gameData.activeEnemies.length > 0) {
+            if (Date.now() - gameData.lastBossSummonTime  0) {
                 let leadEnemy = gameData.activeEnemies[0];
                 if (leadEnemy.name.includes("ドラゴン") || leadEnemy.name.includes("ヒドラドラゴン")) {
                     isTargetMatched = true;
@@ -1156,7 +1014,6 @@
                 if (item.name === "エナドリ") multiplier *= 3;
             });
 
-            // スキルのキラー判定
             gameData.equippedSkills.forEach((skill) => {
                 if (!skill) return;
                 if (skill.type === "killer") {
@@ -1167,9 +1024,7 @@
                 }
             });
 
-            if (Date.now() < gameData.buffEndTime) {
-                multiplier *= gameData.buffMultiplier;
-            } else if (gameData.buffEndTime > 0) {
+            if (Date.now()  0) {
                 gameData.buffEndTime = 0;
             }
 
@@ -1196,21 +1051,7 @@
             let p2 = 1;
             let desc = "";
 
-            if (rand < 30) {
-                droppedSkillName = "タレット"; sType = "turret"; p1 = 3; desc = "3秒に1回自動タップ";
-            } else if (rand < 55) {
-                droppedSkillName = "クリティカル"; sType = "crit"; p1 = 10; p2 = 2; desc = "10%の確率で2倍ダメージ";
-            } else if (rand < 70) {
-                droppedSkillName = "ドラゴンキラー"; sType = "killer"; p1 = 1.5; p2 = "ドラゴン"; desc = "対ドラゴン1.5倍";
-            } else if (rand < 85) {
-                droppedSkillName = "コインフィーバー"; sType = "fever"; p1 = 40; p2 = 2; desc = "40%でコイン2倍";
-            } else if (rand < 95) {
-                droppedSkillName = "新型タレット"; sType = "turret"; p1 = 1; desc = "1秒に1回自動タップ";
-            } else {
-                droppedSkillName = "極クリティカル"; sType = "crit"; p1 = 1; p2 = 6; desc = "1%の確率で6倍ダメージ";
-            }
-
-            const hasInSkills = gameData.skills.some(s => s && s.name === droppedSkillName);
+            if (rand  s && s.name === droppedSkillName);
             const hasInEquipped = gameData.equippedSkills.some(s => s && s.name === droppedSkillName);
 
             if (!hasInSkills && !hasInEquipped) {
@@ -1218,7 +1059,6 @@
             }
         }
 
-        /* 改変: ボス撃破時のHP上限155上昇処理を追加 */
         function grantDefeatRewards(enemy, applyFever = false) {
             if (!enemy || enemy.isSummoned) return;
 
@@ -1230,42 +1070,7 @@
                     if (skill.type === "fever") {
                         let rate = parseFloat(skill.param1) || 40;
                         let mult = parseFloat(skill.param2) || 2;
-                        if (Math.random() * 100 < rate) {
-                            coinGain = Math.floor(coinGain * mult);
-                        }
-                    }
-                });
-            }
-
-            gameData.coins += coinGain;
-
-            let dropRate = enemy.isBoss ? 100 : 0.7;
-            if (Math.random() * 100 < dropRate) {
-                gameData.magicStones += 1;
-            }
-
-            if (enemy.isBoss) {
-                rollSkillDrop();
-                // ボスを倒す毎に最大HPを155上昇させ、現HPも回復
-                gameData.playerMaxHp += 155;
-                gameData.playerHp = Math.min(gameData.playerHp + 155, gameData.playerMaxHp);
-                gameData.bossKillCount = (gameData.bossKillCount || 0) + 1;
-                showCritEffect("💖 ボス撃破！最大HPが155アップ！");
-            }
-        }
-
-        function advanceProgressByEnemyDefeat(enemy) {
-            if (!enemy) return;
-            if (enemy.isSummoned) return;
-
-            if (gameData.isTrueStageActive) {
-                gameData.trueStageProgress += 1;
-            } else {
-                gameData.enemiesRemaining = Math.max(0, gameData.enemiesRemaining - 1);
-                gameData.defeatCount += 1;
-            }
-
-            if (gameData.defeatCount > gameData.maxDefeatCount) {
+                        if (Math.random() * 100  gameData.maxDefeatCount) {
                 gameData.maxDefeatCount = gameData.defeatCount;
             }
         }
@@ -1291,28 +1096,25 @@
             if (gameData.isTrueStageActive && gameData.trueStageProgress >= trueStageEnemies.length) {
                 stopAllBgm();
                 document.body.innerHTML = `
-                    <div class="clear-container">
-                        <h1>🌌 真・裏ステージ完全制覇！ 🌌</h1>
-                        <p>おめでとう！すべての裏試練（全1000体）を突破し、真の平和が訪れました！</p>
-                        <button onclick="location.reload()">最初から遊ぶ</button>
-                    </div>
+                    
+                        🌌 真・裏ステージ完全制覇！ 🌌
+                        おめでとう！すべての裏試練（全${trueStageEnemies.length}体）を突破し、真の平和が訪れました！
+                        最初から遊ぶ
+                    
                 `;
                 return;
             }
 
-            if (!gameData.isTrueStageActive && gameData.enemiesRemaining <= 0) {
-                stopAllBgm();
-                let nextActionText = "周回クリア！強くてニューゲーム";
-                if (gameData.clearRounds >= 2 && gameData.isTrueStageUnlocked) {
-                    nextActionText = "🌌 裏ステージ（全1000体）へ挑む！";
+            if (!gameData.isTrueStageActive && gameData.enemiesRemaining = 2 && gameData.isTrueStageUnlocked) {
+                    nextActionText = 🌌 裏ステージ（全${trueStageEnemies.length}体）へ挑む！;
                 }
 
                 document.body.innerHTML = `
-                    <div class="clear-container">
-                        <h1>🎉 クリアおめでとう！ 🎉</h1>
-                        <p>すべての魔物を討伐しました！強さを引き継いで、さらなる高みへ！</p>
-                        <button onclick="handleClearNext()">${nextActionText}</button>
-                    </div>
+                    
+                        🎉 クリアおめでとう！ 🎉
+                        すべての魔物を討伐しました！強さを引き継いで、さらなる高みへ！
+                        ${nextActionText}
+                    
                 `;
                 return;
             }
@@ -1325,32 +1127,27 @@
             gameData.activeEnemies.forEach((enemy, index) => {
                 let isTargeted = (index === 0);
                 let percentage = (enemy.currentHp / enemy.maxHp) * 100;
-                if (percentage < 0) percentage = 0;
-
-                let avatarHtml = "";
-                if (enemy.isBoss) {
-                    avatarHtml = `
-                        <div class="boss-avatar show">
-                            <div class="boss-horn left"></div>
-                            <div class="boss-horn right"></div>
-                            <div class="boss-eye left"></div>
-                            <div class="boss-eye right"></div>
-                            <span style="font-size:1.8rem; z-index:2;">${enemy.icon}</span>
-                        </div>
+                if (percentage 
+                            
+                            
+                            
+                            
+                            ${enemy.icon}
+                        
                     `;
                 } else {
-                    avatarHtml = `<span class="normal-icon">${enemy.icon}</span>`;
+                    avatarHtml = ${enemy.icon};
                 }
 
                 enemiesHtml += `
-                    <div class="enemy-unit ${isTargeted ? 'targeted' : ''}">
+                    
                         ${avatarHtml}
-                        <div class="enemy-name">${enemy.name} ${isTargeted ? '(🎯)' : ''}</div>
-                        <div class="hp-bar-container">
-                            <div class="hp-bar" style="width: ${percentage}%;"></div>
-                        </div>
-                        <div class="hp-text">HP: ${enemy.currentHp} / ${enemy.maxHp}</div>
-                    </div>
+                        ${enemy.name} ${isTargeted ? '(🎯)' : ''}
+                        
+                            
+                        
+                        HP: ${enemy.currentHp} / ${enemy.maxHp}
+                    
                 `;
             });
             enemiesContainerEl.innerHTML = enemiesHtml;
@@ -1401,7 +1198,6 @@
                 attackButton.style.opacity = "1";
             }
             
-            /* 改変: そらまめ/破壊神との戦闘BGMを soramame.mp3 に変更 */
             let soramameBossActive = gameData.activeEnemies.some(e => e.name === "👑【ラスボス】そらまめ" || e.name === "👌🗿破壊神");
             let hasBossActive = gameData.activeEnemies.some(e => e.isBoss);
 
@@ -1429,55 +1225,7 @@
                 stopAllBgm();
             }
 
-            if (Date.now() < gameData.lastRestartTime + COOLDOWN_TIME) {
-                const rem = Math.ceil((gameData.lastRestartTime + COOLDOWN_TIME - Date.now()) / 1000);
-                restartButton.textContent = `リスタート (${rem}s)`;
-                skipCooldownBtn.style.display = "inline-block";
-                const skipCost = Math.round(gameData.attackPower * 1.5);
-                skipCostEl.textContent = skipCost;
-            } else {
-                restartButton.textContent = "リスタート";
-                skipCooldownBtn.style.display = "none";
-            }
-
-            updateEquipAndSkillSlotsUI();
-            updateConsumableInventoryUI();
-            updateSkillInventoryUI();
-        }
-
-        function updateEquipAndSkillSlotsUI() {
-            for (let i = 0; i < 3; i++) {
-                const item = gameData.equipped[i];
-                const slotEl = document.getElementById(`equip-slot-${i}`);
-                const nameEl = document.getElementById(`slot-${i}-name`);
-                if (item) {
-                    slotEl.classList.add('filled');
-                    nameEl.textContent = item.name;
-                } else {
-                    slotEl.classList.remove('filled');
-                    nameEl.textContent = "なし";
-                }
-            }
-
-            for (let i = 0; i < 3; i++) {
-                const skill = gameData.equippedSkills[i];
-                const slotEl = document.getElementById(`skill-slot-${i}`);
-                const nameEl = document.getElementById(`skill-${i}-name`);
-                if (skill) {
-                    slotEl.classList.add('filled');
-                    nameEl.textContent = skill.name;
-                } else {
-                    slotEl.classList.remove('filled');
-                    nameEl.textContent = "なし";
-                }
-            }
-        }
-
-        function updateConsumableInventoryUI() {
-            let html = "";
-            let hasAny = false;
-
-            Object.keys(gameData.consumables).forEach((name) => {
+            if (Date.now()  {
                 const qty = gameData.consumables[name];
                 if (qty > 0) {
                     hasAny = true;
@@ -1491,10 +1239,10 @@
                     else if (name === "凝縮砂糖水") desc = "MP+30回復";
 
                     html += `
-                        <div class="inv-item">
-                            <span>📦 ${name} (x${qty}) <small style="color:#666;">${desc}</small></span>
-                            <button onclick="useConsumable('${name}')">使う</button>
-                        </div>
+                        
+                            📦 ${name} (x${qty}) ${desc}
+                            使う
+                        
                     `;
                 }
             });
@@ -1502,10 +1250,10 @@
             gameData.inventory.forEach((item, index) => {
                 hasAny = true;
                 html += `
-                    <div class="inv-item">
-                        <span>⚔️ ${item.name} <small style="color:#666;">(装備品)</small></span>
-                        <button onclick="equipItem(${index})">装備する</button>
-                    </div>
+                    
+                        ⚔️ ${item.name} (装備品)
+                        装備する
+                    
                 `;
             });
 
@@ -1525,24 +1273,20 @@
             let html = "";
             gameData.skills.forEach((skill, index) => {
                 html += `
-                    <div class="inv-item" style="flex-direction:column; align-items:flex-start; gap:2px;">
-                        <div style="display:flex; justify-space-between; width:100%;">
-                            <span><strong>${skill.name}</strong></span>
-                            <button onclick="equipSkill(${index})">装備する</button>
-                        </div>
-                        <small style="color:#555;">タイプ: ${skill.type} / 性能: ${skill.desc}</small>
-                    </div>
+                    
+                        
+                            ${skill.name}
+                            装備する
+                        
+                        タイプ: ${skill.type} / 性能: ${skill.desc}
+                    
                 `;
             });
             skillInventoryListEl.innerHTML = html;
         }
 
         window.useConsumable = function(itemName) {
-            if (gameData.consumables[itemName] <= 0) return;
-
-            let used = false;
-            if (itemName === "薬草") {
-                if (gameData.playerHp >= gameData.playerMaxHp) { alert("HPはすでに満タンです！"); return; }
+            if (gameData.consumables[itemName] = gameData.playerMaxHp) { alert("HPはすでに満タンです！"); return; }
                 gameData.playerHp = Math.min(gameData.playerMaxHp, gameData.playerHp + 15);
                 used = true;
             } else if (itemName === "安物の薬") {
@@ -1573,7 +1317,7 @@
 
             if (used) {
                 gameData.consumables[itemName] -= 1;
-                showCritEffect(`✨ ${itemName}を使った！`);
+                showCritEffect(✨ ${itemName}を使った！);
                 saveGame();
                 updateScreen();
             }
@@ -1679,13 +1423,18 @@
         };
 
         window.adminFreeLevelUp = function() {
+            if (gameData.level >= MAX_LEVEL) {
+                alert(⚠️ レベルは上限（Lv.${MAX_LEVEL}）です！);
+                return;
+            }
+
             gameData.level += 1;
             gameData.playerMaxHp += 50;
             gameData.playerHp = gameData.playerMaxHp;
             gameData.playerMaxMp += 3;
             gameData.playerMp = gameData.playerMaxMp;
             gameData.attackPower += 2;
-            gameData.evasion = Math.min(90, gameData.evasion + 1);
+            gameData.evasion = Math.min(MAX_EVASION, gameData.evasion + 1);
             saveGame();
             updateScreen();
             alert("⚡ レベルをタダで1アップしました！");
@@ -1723,12 +1472,7 @@
             }
 
             if (count === 2) {
-                if (gameData.activeEnemies.length < 2) {
-                    const second = { ...gameData.activeEnemies[0] };
-                    gameData.activeEnemies.push(second);
-                }
-            } else {
-                if (gameData.activeEnemies.length > 1) {
+                if (gameData.activeEnemies.length  1) {
                     gameData.activeEnemies = [gameData.activeEnemies[0]];
                 }
             }
@@ -1745,48 +1489,8 @@
         };
         window.applyGachaCustom = function() {
             const val = parseFloat(document.getElementById('edit-gacha-rate').value);
-            if (!isNaN(val) && val >= 0 && val <= 100) {
-                gameData.customHighRate = val;
-                alert(`🎯 ガチャ最高レア排出確率を ${val}% に変更しました！`);
-                closeGachaCustomModal();
-                saveGame();
-            } else {
-                alert("0〜100の正しい数値を入力してください。");
-            }
-        };
-
-        window.openSkillCreateModal = function() {
-            document.getElementById('skill-create-modal').style.display = 'flex';
-        };
-        window.closeSkillCreateModal = function() {
-            document.getElementById('skill-create-modal').style.display = 'none';
-        };
-        window.createCustomSkill = function() {
-            const name = document.getElementById('custom-skill-name').value || "オリジナルスキル";
-            const type = document.getElementById('custom-skill-type').value;
-            const p1 = document.getElementById('custom-skill-p1').value || "1";
-            const p2 = document.getElementById('custom-skill-p2').value || "";
-            const desc = document.getElementById('custom-skill-desc').value || "カスタムスキルです";
-
-            const newSkill = {
-                name: name,
-                type: type,
-                param1: p1,
-                param2: p2,
-                desc: desc,
-                cooldown: p1 + "秒"
-            };
-
-            gameData.skills.push(newSkill);
-            alert(`✨ スキル「${name}」を作成して追加しました！`);
-            closeSkillCreateModal();
-            saveGame();
-            updateScreen();
-        };
-
-        window.handleClearNext = function() {
-            if (gameData.clearRounds >= 2 && gameData.isTrueStageUnlocked && !gameData.isTrueStageActive) {
-                if (!confirm("【裏ステージ突入】\nこれより強さを引き継いだまま、全1000体の真の裏ステージへ挑戦しますか？")) return;
+            if (!isNaN(val) && val >= 0 && val = 2 && gameData.isTrueStageUnlocked && !gameData.isTrueStageActive) {
+                if (!confirm(【裏ステージ突入】\nこれより強さを引き継いだまま、全${trueStageEnemies.length}体の真の裏ステージへ挑戦しますか？)) return;
                 gameData.isTrueStageActive = true;
                 gameData.trueStageProgress = 0;
                 gameData.coins += 1500000000;
@@ -1827,128 +1531,37 @@
             let targetEnemy = gameData.activeEnemies[0];
             let currentAttack = calculateTotalAttack();
 
-            // 装備中スキルの効果適用
             gameData.equippedSkills.forEach((skill) => {
                 if (!skill) return;
                 if (skill.type === "crit") {
                     let rate = parseFloat(skill.param1) || 10;
                     let mult = parseFloat(skill.param2) || 2;
-                    if (Math.random() * 100 < rate) {
-                        currentAttack = Math.floor(currentAttack * mult);
-                        showCritEffect(`💥 クリティカル！ ${currentAttack}ダメージ！`);
-                    }
-                }
-            });
-
-            if (Math.random() * 100 < targetEnemy.eva) {
-                showCritEffect("💨 敵に回避された！");
-            } else {
-                targetEnemy.currentHp -= currentAttack;
-                if (targetEnemy.currentHp <= 0) {
-                    defeatEnemyAt(0, true);
-                }
-            }
-
-            saveGame();
-            updateScreen();
-        }
-
-        function castMagic(type) {
-            if (gameData.isStopped) return;
-            if (!gameData.activeEnemies || gameData.activeEnemies.length === 0) return;
-
-            let reqMp = (type === 'wind') ? 5 : 3;
-            if (gameData.playerMp < reqMp) {
-                alert("MPが足りません！");
-                return;
-            }
-
-            gameData.playerMp -= reqMp;
-
-            let target = gameData.activeEnemies[0];
-            let isTrue = gameData.isTrueStageActive;
-
-            if (type === 'fire') {
-                let baseDmg = isTrue ? 750000 : 135;
-                let mult = (target.element === "ice") ? 2.0 : (target.element === "fire" ? 0.5 : 1.0);
-                let dmg = Math.floor(baseDmg * mult);
-                target.currentHp -= dmg;
-                showCritEffect(`🔥 ファイヤ！ ${dmg.toLocaleString()}ダメージ！`);
-            } else if (type === 'ice') {
-                let baseDmg = isTrue ? 750000 : 135;
-                let mult = (target.element === "fire") ? 2.0 : (target.element === "ice" ? 0.5 : 1.0);
-                let dmg = Math.floor(baseDmg * mult);
-                target.currentHp -= dmg;
-                showCritEffect(`❄️ アイス！ ${dmg.toLocaleString()}ダメージ！`);
-            } else if (type === 'wind') {
-                let baseDmg = isTrue ? 450000 : 70;
-                let dmg = baseDmg;
-                gameData.activeEnemies.forEach(e => {
+                    if (Math.random() * 100  {
                     e.currentHp -= dmg;
                 });
-                showCritEffect(`🌪️ 扇子アタック！ 全体に ${dmg.toLocaleString()}ダメージ`);
+                showCritEffect(🌪️ 扇子アタック！ 全体に ${dmg.toLocaleString()}ダメージ);
             }
 
             for (let i = gameData.activeEnemies.length - 1; i >= 0; i--) {
-                if (gameData.activeEnemies[i].currentHp <= 0) {
-                    defeatEnemyAt(i, true);
-                }
-            }
-
-            closeMagicModal();
-            saveGame();
-            updateScreen();
-        }
-
-        function enemyAttackAction() {
-            if (!gameStarted) return;
-            if (gameData.isStopped) return;
-            if (!gameData.activeEnemies || gameData.activeEnemies.length === 0) return;
-
-            const enemyUnits = document.querySelectorAll('.enemy-unit');
-            enemyUnits.forEach(u => {
+                if (gameData.activeEnemies[i].currentHp  {
                 u.classList.add('enemy-rush-anim');
                 setTimeout(() => u.classList.remove('enemy-rush-anim'), 300);
             });
 
             const evaChance = gameData.evasion;
-            if (Math.random() * 100 < evaChance) {
-                showCritEffect("🌀 攻撃を回避した！");
-                return;
-            }
-
-            let totalDmg = 0;
-            gameData.activeEnemies.forEach(enemy => {
+            if (Math.random() * 100  {
                 totalDmg += (enemy.atk || 1);
             });
 
             gameData.playerHp -= totalDmg;
-            showCritEffect(`💔 合計 ${totalDmg}ダメージを受けた！`);
+            showCritEffect(💔 合計 ${totalDmg.toLocaleString()}ダメージを受けた！);
 
-            if (gameData.playerHp <= 0) {
-                handlePlayerDefeat();
-            } else {
-                saveGame();
-                updateScreen();
-            }
-        }
-
-        function handlePlayerDefeat() {
-            if (gameData.isTrueStageActive) {
-                alert("【敗北】裏の試練で倒れてしまった… (進行度は維持されます)");
-            } else {
-                let rem = gameData.enemiesRemaining;
-                let bRem = rem + 10;
-                if (bRem > 1000) bRem = 1000;
+            if (gameData.playerHp  1000) bRem = 1000;
 
                 let adjustedRemaining = bRem;
                 const bossCheckpoints = [500, 1];
                 for (let b of bossCheckpoints) {
-                    if (rem > b && bRem <= b) {
-                        adjustedRemaining = b + 1;
-                        break;
-                    }
-                    if (rem === b && bRem >= bRem) {
+                    if (rem > b && bRem = bRem) {
                         adjustedRemaining = bRem - 1;
                         break;
                     }
@@ -1969,24 +1582,14 @@
 
         attackButton.addEventListener('click', performAttack);
 
-        // 基本の自動攻撃タイマー
         setInterval(() => { if (gameStarted && !gameData.isStopped) performAttack(); }, 2000);
         
-        // タレット系スキルを動的に管理する自動攻撃ループ
         setInterval(() => {
             if (gameStarted && !gameData.isStopped) {
                 gameData.equippedSkills.forEach(skill => {
                     if (skill && skill.type === "turret") {
                         let intervalSec = parseFloat(skill.param1) || 3;
-                        if (Math.random() < (1 / intervalSec)) {
-                            performAttack();
-                        }
-                    }
-                });
-            }
-        }, 1000);
-
-        setInterval(() => {
+                        if (Math.random()  {
             maybeSummonBossMinion();
         }, 1000);
 
@@ -2001,32 +1604,24 @@
         });
 
         shopButton.addEventListener('click', () => {
-            if (gameData.level < 3) return;
-            const costHerb = 2;
-            const costGen = 5;
-            const costSoda = 3;
-            const costSugar = 8;
-
-            const shopListEl = document.getElementById('shop-item-list');
-            shopListEl.innerHTML = `
-                <div style="display:flex; flex-direction:column; gap:8px;">
-                    <div class="inv-item">
-                        <span>🌿 薬草 (HP+15)<br><small>価格: 💎${costHerb}ルビー</small></span>
-                        <button onclick="buyShopItem('薬草', ${costHerb})">買う</button>
-                    </div>
-                    <div class="inv-item">
-                        <span>💊 一般的な薬 (HP+50)<br><small>価格: 💎${costGen}ルビー</small></span>
-                        <button onclick="buyShopItem('一般的な薬', ${costGen})">買う</button>
-                    </div>
-                    <div class="inv-item">
-                        <span>🥤 キャンディソーダ (MP+10)<br><small>価格: 💎${costSoda}ルビー</small></span>
-                        <button onclick="buyShopItem('キャンディソーダ', ${costSoda})">買う</button>
-                    </div>
-                    <div class="inv-item">
-                        <span>🧪 凝縮砂糖水 (MP+30)<br><small>価格: 💎${costSugar}ルビー</small></span>
-                        <button onclick="buyShopItem('凝縮砂糖水', ${costSugar})">買う</button>
-                    </div>
-                </div>
+            if (gameData.level 
+                    
+                        🌿 薬草 (HP+15)価格: 💎${costHerb}ルビー
+                        買う
+                    
+                    
+                        💊 一般的な薬 (HP+50)価格: 💎${costGen}ルビー
+                        買う
+                    
+                    
+                        🥤 キャンディソーダ (MP+10)価格: 💎${costSoda}ルビー
+                        買う
+                    
+                    
+                        🧪 凝縮砂糖水 (MP+30)価格: 💎${costSugar}ルビー
+                        買う
+                    
+                
             `;
             shopModal.style.display = 'flex';
         });
@@ -2034,18 +1629,7 @@
         window.closeShopModal = function() { shopModal.style.display = 'none'; };
 
         window.buyShopItem = function(itemName, cost) {
-            if (gameData.rubies < cost) {
-                alert("ルビーが足りません！");
-                return;
-            }
-            gameData.rubies -= cost;
-            gameData.consumables[itemName] = (gameData.consumables[itemName] || 0) + 1;
-            showCritEffect(`🛍️ ${itemName}を購入しました！`);
-            saveGame();
-            updateScreen();
-        };
-
-        magicButton.addEventListener('click', () => {
+            if (gameData.rubies  {
             document.getElementById('modal-mp-text').textContent = gameData.playerMp;
             document.getElementById('modal-max-mp-text').textContent = gameData.playerMaxMp;
             magicModal.style.display = 'flex';
@@ -2054,43 +1638,19 @@
         window.closeMagicModal = function() { magicModal.style.display = 'none'; };
 
         upgradeButton.addEventListener('click', () => {
-            if (gameData.level >= 100) { alert("すでにレベルが上限（Lv.100）に達しています！"); return; }
+            if (gameData.level >= MAX_LEVEL) {
+                alert(すでにレベルが上限（Lv.${MAX_LEVEL}）に達しています！);
+                return;
+            }
 
             let reqRubies = 0;
             let reqStones = 0;
             let currentLv = gameData.level;
 
-            if (currentLv >= 30 && currentLv < 50) reqRubies = 5;
-            else if (currentLv >= 50 && currentLv < 75) reqRubies = 15;
-            else if (currentLv >= 75 && currentLv < 90) reqRubies = 30;
-            else if (currentLv >= 90 && currentLv < 100) { reqRubies = 50; reqStones = 1; }
-
-            if (gameData.coins < gameData.upgradeCost) { alert("コインが足りません！"); return; }
-            if (gameData.rubies < reqRubies) { alert(`レベルアップにはルビーが ${reqRubies}個 必要です！`); return; }
-            if (gameData.magicStones < reqStones) { alert(`レベルアップには魔法石が ${reqStones}個 必要です！`); return; }
-
-            gameData.coins -= gameData.upgradeCost;
-            gameData.rubies -= reqRubies;
-            gameData.magicStones -= reqStones;
-
-            gameData.level += 1;
-            gameData.playerMaxHp += 50;
-            gameData.playerHp = gameData.playerMaxHp;
-            gameData.playerMaxMp += 3;
-            gameData.playerMp = gameData.playerMaxMp;
-            gameData.attackPower += 2;
-            gameData.evasion = Math.min(90, gameData.evasion + 1);
-
-            gameData.upgradeCost = Math.floor(gameData.upgradeCost * 1.5) + 2;
-
-            saveGame();
-            updateScreen();
-        });
-
-        rubyExchangeBtn.addEventListener('click', () => {
+            if (currentLv >= 30 && currentLv = 50 && currentLv = 75 && currentLv = 90 && currentLv  {
             const exchangeCost = gameData.attackPower * 6;
             if (gameData.coins >= exchangeCost) {
-                if (confirm(`🪙コイン${exchangeCost}枚を消費して、💎ルビー1個と交換しますか？`)) {
+                if (confirm(🪙コイン${exchangeCost}枚を消費して、💎ルビー1個と交換しますか？)) {
                     gameData.coins -= exchangeCost;
                     gameData.rubies += 1;
                     saveGame();
@@ -2137,35 +1697,10 @@
                 }
                 return;
             }
-            if (gameData.defeatCount <= 0) {
-                alert("進んでいないためリスタートできません！");
-                return;
-            }
-
-            if (Date.now() < gameData.lastRestartTime + COOLDOWN_TIME) {
-                alert("リスタートはクールダウン中です！");
-                return;
-            }
-
-            if (confirm("リスタートしますか？ (ステージ進行とスキルがリセットされます)")) {
-                gameData.enemiesRemaining = 1000;
-                gameData.defeatCount = 0;
-                gameData.skills = [];
-                gameData.equippedSkills = [null, null, null];
-                gameData.lastRestartTime = Date.now();
-                gameData.playerHp = gameData.playerMaxHp;
-                gameData.playerMp = gameData.playerMaxMp;
-                gameData.lastBossSummonTime = 0;
-                spawnOrRefreshEnemies();
-                saveGame();
-                updateScreen();
-            }
-        });
-
-        skipCooldownBtn.addEventListener('click', () => {
+            if (gameData.defeatCount  {
             const skipCost = Math.round(gameData.attackPower * 1.5);
             if (gameData.coins >= skipCost) {
-                if (confirm(`🪙${skipCost}枚を支払ってクールダウンをスキップしますか？`)) {
+                if (confirm(🪙${skipCost}枚を支払ってクールダウンをスキップしますか？)) {
                     gameData.coins -= skipCost;
                     gameData.lastRestartTime = 0;
                     saveGame();
@@ -2179,48 +1714,7 @@
 
         function rollGacha(count) {
             const cost = count * 10;
-            if (gameData.rubies < cost) {
-                alert(`ルビーが足りません！ (${cost}ルビー必要)`);
-                return;
-            }
-
-            gameData.rubies -= cost;
-            let results = [];
-
-            let highRate = gameData.customHighRate !== null ? gameData.customHighRate : 5;
-
-            for (let i = 0; i < count; i++) {
-                let rand = Math.random() * 100;
-                let item = null;
-
-                if (rand < highRate) {
-                    item = { name: "伝説の剣", type: "sword" };
-                } else if (rand < highRate + highRate) {
-                    item = { name: "エナドリ", type: "item" };
-                } else if (rand < 35) {
-                    item = { name: "普通の剣", type: "sword" };
-                } else if (rand < 60) {
-                    item = { name: "少しいい剣", type: "sword" };
-                } else if (rand < 75) {
-                    item = { name: "上質な剣", type: "sword" };
-                } else {
-                    item = { name: "健康飲料", type: "item" };
-                }
-
-                gameData.inventory.push(item);
-                results.push(item.name);
-            }
-
-            alert(`🎁 ガチャ結果:\n${results.join('\n')}`);
-            saveGame();
-            updateScreen();
-        }
-
-        window.closeHowToModal = function() {
-            howtoModal.style.display = 'none';
-        };
-
-        howToBtn.addEventListener('click', () => {
+            if (gameData.rubies  {
             howtoModal.style.display = 'flex';
         });
 
@@ -2243,6 +1737,7 @@
         
         setInterval(updateScreen, 1000);
         updateScreen();
-    </script>
-</body>
-</html>
+    
+
+
+
