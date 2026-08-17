@@ -178,6 +178,28 @@
             border-radius: 3px;
             cursor: pointer;
         }
+        .admin-panel {
+            background: #343a40;
+            color: white;
+            border: 2px dashed #ffc107;
+            display: none;
+        }
+        .admin-panel h3 {
+            color: #ffc107;
+        }
+        .admin-btn {
+            background-color: #ffc107;
+            color: #000;
+            font-weight: bold;
+            border: none;
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .admin-btn:active {
+            background-color: #e0a800;
+        }
         .clear-container {
             margin-top: 50px;
         }
@@ -214,6 +236,20 @@
     </div>
     
     <button id="attack-button">攻撃！</button>
+
+    <!-- 管理者専用パネル（ブラウザにフラグがある人のみ表示） -->
+    <div class="section-box admin-panel" id="admin-panel">
+        <h3>⚙️ 管理者パネル</h3>
+        <div class="button-row" style="margin-bottom: 5px;">
+            <button class="admin-btn" onclick="adminAddCoins()">🪙 コイン+1万</button>
+            <button class="admin-btn" onclick="adminAddRubies()">💎 ルビー+100</button>
+            <button class="admin-btn" onclick="adminKillEnemy()">💥 敵を一撃撃破</button>
+        </div>
+        <div class="button-row">
+            <button class="admin-btn" onclick="adminSkip100()">⏩ 残り-100体</button>
+            <button class="admin-btn" onclick="adminUnlockAllSkills()">✨ 全スキル獲得</button>
+        </div>
+    </div>
 
     <div class="menu-buttons">
         <div class="button-row">
@@ -343,7 +379,13 @@
         const inventoryListEl = document.getElementById('inventory-list');
         const skillInventoryListEl = document.getElementById('skill-inventory-list');
         const activeBuffTextEl = document.getElementById('active-buff-text');
+        const adminPanelEl = document.getElementById('admin-panel');
         const body = document.body;
+
+        // 管理者モードのチェック
+        if (localStorage.getItem('soramame_admin') === 'true') {
+            adminPanelEl.style.display = 'block';
+        }
 
         function loadGame() {
             const saved = localStorage.getItem('soramame_save_v7');
@@ -376,13 +418,7 @@
             return 15;
         }
 
-        function isBossRemaining(remaining) {
-            const bossList = [950, 900, 800, 600, 500, 350, 100, 50, 1];
-            return bossList.includes(remaining);
-        }
-
         function getCurrentEnemyInfo(remaining) {
-            // 固定の強力なボスHP設定
             if (remaining === 950) return { name: "【ボス】ダウナー", hp: 3000, isDragon: false, isBoss: true };
             if (remaining === 900) return { name: "【ボス】ダンビル", hp: 8000, isDragon: false, isBoss: true };
             if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: 20000, isDragon: false, isBoss: true };
@@ -425,7 +461,6 @@
                 if (item.name === "エナドリ") multiplier *= 3;
             });
 
-            // スキル：ドラゴンキラー
             gameData.equippedSkills.forEach((skill) => {
                 if (!skill) return;
                 if (skill.name === "ドラゴンキラー" && isDragonTarget) {
@@ -467,7 +502,6 @@
                 else if (droppedSkillName === "新型タレット") { desc = "1秒に1回自動タップ"; cooldown = "1秒"; }
 
                 gameData.skills.push({ name: droppedSkillName, desc: desc, cooldown: cooldown });
-                alert(`🎉 ボス撃破報酬！\n新しいスキル「${droppedSkillName}」を手に入れた！`);
             }
         }
 
@@ -477,7 +511,7 @@
                     <div class="clear-container">
                         <h1>🎉 クリア！ 🎉</h1>
                         <p>おめでとう！<br>そらまめ軍団はすべての魔物を討伐し、平和を取り戻しました！</p>
-                        <button onclick="localStorage.removeItem('soramame_save_v7'); localStorage.removeItem('soramame_save_v6'); localStorage.removeItem('soramame_save_v5'); location.reload();">最初から遊ぶ</button>
+                        <button onclick="localStorage.removeItem('soramame_save_v7'); localStorage.removeItem('soramame_save_v6'); location.reload();">最初から遊ぶ</button>
                     </div>
                 `;
                 return;
@@ -634,13 +668,10 @@
         window.equipItem = function(invIndex) {
             const item = gameData.inventory[invIndex];
             if (!item) return;
-
             const isSword = item.type === "sword";
 
             if (isSword) {
-                if (gameData.equipped[0]) {
-                    gameData.inventory.push(gameData.equipped[0]);
-                }
+                if (gameData.equipped[0]) gameData.inventory.push(gameData.equipped[0]);
                 gameData.equipped[0] = item;
                 gameData.inventory.splice(invIndex, 1);
             } else {
@@ -651,11 +682,9 @@
                     targetSlot = 1;
                     gameData.inventory.push(gameData.equipped[1]);
                 }
-
                 gameData.equipped[targetSlot] = item;
                 gameData.inventory.splice(invIndex, 1);
             }
-
             saveGame();
             updateScreen();
         };
@@ -663,10 +692,8 @@
         window.unequipItem = function(slotIndex) {
             const item = gameData.equipped[slotIndex];
             if (!item) return;
-
             gameData.inventory.push(item);
             gameData.equipped[slotIndex] = null;
-
             saveGame();
             updateScreen();
         };
@@ -686,7 +713,6 @@
 
             gameData.equippedSkills[targetSlot] = skill;
             gameData.skills.splice(skillIndex, 1);
-
             saveGame();
             updateScreen();
         };
@@ -694,10 +720,58 @@
         window.unequipSkill = function(slotIndex) {
             const skill = gameData.equippedSkills[slotIndex];
             if (!skill) return;
-
             gameData.skills.push(skill);
             gameData.equippedSkills[slotIndex] = null;
+            saveGame();
+            updateScreen();
+        };
 
+        // 管理者ボタン用のアクション
+        window.adminAddCoins = function() {
+            gameData.coins += 10000;
+            saveGame();
+            updateScreen();
+        };
+
+        window.adminAddRubies = function() {
+            gameData.rubies += 100;
+            saveGame();
+            updateScreen();
+        };
+
+        window.adminKillEnemy = function() {
+            gameData.enemyHp = 0;
+            performAttack();
+        };
+
+        window.adminSkip100 = function() {
+            gameData.enemiesRemaining = Math.max(0, gameData.enemiesRemaining - 100);
+            gameData.defeatCount += 100;
+            if (gameData.defeatCount > gameData.maxDefeatCount) {
+                gameData.maxDefeatCount = gameData.defeatCount;
+            }
+            const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
+            gameData.enemyMaxHp = currentEnemy.hp;
+            gameData.enemyHp = currentEnemy.hp;
+            saveGame();
+            updateScreen();
+        };
+
+        window.adminUnlockAllSkills = function() {
+            const allSkills = [
+                { name: "タレット", desc: "3秒に1回自動タップ", cooldown: "3秒" },
+                { name: "クリティカル", desc: "10%の確率で2倍ダメージ", cooldown: "常時" },
+                { name: "極クリティカル", desc: "1%の確率で6倍ダメージ", cooldown: "常時" },
+                { name: "コインフィーバー", desc: "40%でコイン2倍獲得", cooldown: "撃破時" },
+                { name: "ドラゴンキラー", desc: "ドラゴンに対して1.5倍", cooldown: "常時" },
+                { name: "新型タレット", desc: "1秒に1回自動タップ", cooldown: "1秒" }
+            ];
+            allSkills.forEach(s => {
+                const exists = gameData.skills.some(item => item.name === s.name) || gameData.equippedSkills.some(item => item && item.name === s.name);
+                if (!exists) {
+                    gameData.skills.push(s);
+                }
+            });
             saveGame();
             updateScreen();
         };
@@ -708,38 +782,23 @@
                 alert("ルビーが足りません！");
                 return;
             }
-
-            const confirmMsg = count === 1 ? 
-                "💎10ルビーを消費してガチャを1回引きますか？" : 
-                "💎100ルビーを消費してガチャ10連を引きますか？";
-
-            if (!confirm(confirmMsg)) return;
+            if (!confirm(count === 1 ? "💎10ルビーでガチャを1回引きますか？" : "💎100ルビーでガチャ10連を引きますか？")) return;
 
             gameData.rubies -= cost;
             let results = [];
-
             for (let i = 0; i < count; i++) {
                 const rand = Math.random() * 100;
                 let obtained = null;
-
-                if (rand < 35) {
-                    obtained = { name: "普通の剣", type: "sword" };
-                } else if (rand < 60) {
-                    obtained = { name: "少しいい剣", type: "sword" };
-                } else if (rand < 75) {
-                    obtained = { name: "上質な剣", type: "sword" };
-                } else if (rand < 80) {
-                    obtained = { name: "伝説の剣", type: "sword" };
-                } else if (rand < 95) {
-                    obtained = { name: "健康飲料", type: "item" };
-                } else {
-                    obtained = { name: "エナドリ", type: "item" };
-                }
+                if (rand < 35) obtained = { name: "普通の剣", type: "sword" };
+                else if (rand < 60) obtained = { name: "少しいい剣", type: "sword" };
+                else if (rand < 75) obtained = { name: "上質な剣", type: "sword" };
+                else if (rand < 80) obtained = { name: "伝説の剣", type: "sword" };
+                else if (rand < 95) obtained = { name: "健康飲料", type: "item" };
+                else obtained = { name: "エナドリ", type: "item" };
 
                 gameData.inventory.push(obtained);
                 results.push(obtained.name);
             }
-
             saveGame();
             updateScreen();
             alert("ガチャ結果:\n" + results.join("\n"));
@@ -756,30 +815,17 @@
 
             gameData.equippedSkills.forEach((skill) => {
                 if (!skill) return;
-                if (skill.name === "クリティカル") {
-                    if (Math.random() < 0.10) {
-                        currentAttack *= 2;
-                    }
-                }
-                if (skill.name === "極クリティカル") {
-                    if (Math.random() < 0.01) {
-                        currentAttack *= 6;
-                    }
-                }
+                if (skill.name === "クリティカル" && Math.random() < 0.10) currentAttack *= 2;
+                if (skill.name === "極クリティカル" && Math.random() < 0.01) currentAttack *= 6;
             });
 
             gameData.enemyHp -= currentAttack;
 
             if (gameData.enemyHp <= 0) {
                 let coinGain = getCoinReward(gameData.enemiesRemaining);
-
                 gameData.equippedSkills.forEach((skill) => {
                     if (!skill) return;
-                    if (skill.name === "コインフィーバー") {
-                        if (Math.random() < 0.40) {
-                            coinGain *= 2;
-                        }
-                    }
+                    if (skill.name === "コインフィーバー" && Math.random() < 0.40) coinGain *= 2;
                 });
 
                 gameData.coins += coinGain;
@@ -790,8 +836,7 @@
                 gameData.enemiesRemaining -= 1;
                 gameData.defeatCount += 1;
 
-                const isDragonDefeated = currentEnemy.name.includes("ドラゴン");
-                if (isDragonDefeated || Math.random() < 0.09) {
+                if (currentEnemy.name.includes("ドラゴン") || Math.random() < 0.09) {
                     gameData.rubies += 1;
                 }
 
@@ -816,22 +861,12 @@
 
         attackButton.addEventListener('click', performAttack);
 
+        setInterval(() => performAttack(), 2000);
         setInterval(() => {
-            performAttack();
-        }, 2000);
-
-        setInterval(() => {
-            const hasTurret = gameData.equippedSkills.some(s => s && s.name === "タレット");
-            if (hasTurret) {
-                performAttack();
-            }
+            if (gameData.equippedSkills.some(s => s && s.name === "タレット")) performAttack();
         }, 3000);
-
         setInterval(() => {
-            const hasNewTurret = gameData.equippedSkills.some(s => s && s.name === "新型タレット");
-            if (hasNewTurret) {
-                performAttack();
-            }
+            if (gameData.equippedSkills.some(s => s && s.name === "新型タレット")) performAttack();
         }, 1000);
 
         upgradeButton.addEventListener('click', () => {
@@ -854,7 +889,6 @@
                     gameData.rubies += 1;
                     saveGame();
                     updateScreen();
-                    alert("ルビーを1個手に入れた！");
                 }
             } else {
                 alert("コインが足りません！");
@@ -880,13 +914,10 @@
                 alert("歴代の最高到達点まで進まないとリスタートできません！");
                 return;
             }
-            
-            const now = Date.now();
-            if (now - gameData.lastRestartTime < COOLDOWN_TIME) {
+            if (Date.now() - gameData.lastRestartTime < COOLDOWN_TIME) {
                 alert("まだクールダウン中です！");
                 return;
             }
-
             if (confirm("残りの敵を1000体にリセットしますか？\n(※所持しているスキルもリセットされます)")) {
                 gameData.enemiesRemaining = 1000;
                 gameData.defeatCount = 0;
@@ -909,7 +940,6 @@
                     gameData.lastRestartTime = 0;
                     saveGame();
                     updateScreen();
-                    alert("クールダウンをスキップしました！");
                 }
             } else {
                 alert("コインが足りません！");
