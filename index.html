@@ -1249,6 +1249,17 @@
                 startScreenEl.style.display = 'none';
             }, 500);
 
+            // スタート時の音声再生制限解除（通常・ボス両方のオーディオを事前準備）
+            bgmNormal.play().then(() => {
+                bgmNormal.pause();
+                bgmNormal.currentTime = 0;
+            }).catch(e => {});
+            
+            bgmBoss.play().then(() => {
+                bgmBoss.pause();
+                bgmBoss.currentTime = 0;
+            }).catch(e => {});
+
             if (gameData.bgmEnabled) {
                 updateScreen();
             }
