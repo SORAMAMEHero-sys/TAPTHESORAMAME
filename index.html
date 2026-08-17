@@ -435,10 +435,10 @@
             if (!confirm("最後の確認です。本当に最初からにしますか？")) return;
             if (!confirm("それではデータを完全削除します。よろしいですね？")) return;
 
-            // 全てのバージョンのセーブデータを一掃
+            // 全てのセーブデータを一掃
             localStorage.clear();
             
-            // ページを完全に再読み込みしてタイマーを完全にリセット
+            // ページを完全に再読み込み
             location.reload();
         };
 
@@ -454,11 +454,11 @@
         }
 
         function getCurrentEnemyInfo(remaining) {
-            if (remaining === 950) return { name: "【ボス】ダウナー", hp: 3000, isDragon: false, isBoss: true };
-            if (remaining === 900) return { name: "【ボス】ダンビル", hp: 8000, isDragon: false, isBoss: true };
-            if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: 20000, isDragon: false, isBoss: true };
-            if (remaining === 600) return { name: "【ボス】ロメンテヤシ", hp: 60000, isDragon: false, isBoss: true };
-            if (remaining === 500) return { name: "【ボス】ソクラゼウス", hp: 150000, isDragon: false, isBoss: true };
+            if (remaining === 950) return { name: "【ボス】ダウナー", hp: 18000, isDragon: false, isBoss: true }; // 6倍 (3000 * 6)
+            if (remaining === 900) return { name: "【ボス】ダンビル", hp: 32000, isDragon: false, isBoss: true }; // 4倍 (8000 * 4)
+            if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: 50000, isDragon: false, isBoss: true }; // 2.5倍 (20000 * 2.5)
+            if (remaining === 600) return { name: "【ボス】ロメンテヤシ", hp: 120000, isDragon: false, isBoss: true }; // 2倍 (60000 * 2)
+            if (remaining === 500) return { name: "【ボス】ソクラゼウス", hp: 150000, isDragon: false, isBoss: true }; // そのまま (150000)
             if (remaining === 350) return { name: "【ボス】ダウナー EX", hp: 400000, isDragon: false, isBoss: true };
             if (remaining === 100) return { name: "【ボス】終焉の支配者", hp: 1200000, isDragon: false, isBoss: true };
             if (remaining === 50)  return { name: "【ボス】ラストビュオス", hp: 3500000, isDragon: false, isBoss: true };
