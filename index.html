@@ -241,7 +241,7 @@
     <div class="section-box admin-panel" id="admin-panel">
         <h3>⚙️ 管理者パネル</h3>
         <div class="button-row" style="margin-bottom: 5px;">
-            <button class="admin-btn" onclick="adminAddCoins()">🪙 コイン+1万</button>
+            <button class="admin-btn" onclick="adminAddCoins()">🪙 コイン+1億</button>
             <button class="admin-btn" onclick="adminAddRubies()">💎 ルビー+100</button>
             <button class="admin-btn" onclick="adminKillEnemy()">💥 敵を一撃撃破</button>
         </div>
@@ -389,10 +389,10 @@
         }
 
         function loadGame() {
-            const saved = localStorage.getItem('soramame_save_v7');
+            const saved = localStorage.getItem('soramame_save_v8');
             let targetSave = saved;
             if (!targetSave) {
-                targetSave = localStorage.getItem('soramame_save_v6') || localStorage.getItem('soramame_save_v5') || localStorage.getItem('soramame_save_v4');
+                targetSave = localStorage.getItem('soramame_save_v7') || localStorage.getItem('soramame_save_v6') || localStorage.getItem('soramame_save_v5');
             }
             if (targetSave) {
                 try {
@@ -405,7 +405,7 @@
         }
 
         function saveGame() {
-            localStorage.setItem('soramame_save_v7', JSON.stringify(gameData));
+            localStorage.setItem('soramame_save_v8', JSON.stringify(gameData));
         }
 
         function getCoinReward(remaining) {
@@ -433,7 +433,8 @@
             const index = gameData.defeatCount % normalEnemies.length;
             const baseEnemy = normalEnemies[index];
             const groupLevel = Math.floor(gameData.defeatCount / 5);
-            const scaledHp = Math.floor(baseEnemy.hp * Math.pow(1.5, groupLevel));
+            // インフレが激しすぎないよう調整（掛け算ではなく加算、または控えめな増加に抑える例：ベースHP＋グループ毎に250加算）
+            const scaledHp = baseEnemy.hp + (groupLevel * 250);
             const isDragon = (baseEnemy.name.includes("ドラゴン"));
 
             return { name: baseEnemy.name, hp: scaledHp, isDragon: isDragon, isBoss: false };
@@ -512,7 +513,7 @@
                     <div class="clear-container">
                         <h1>🎉 クリア！ 🎉</h1>
                         <p>おめでとう！<br>そらまめ軍団はすべての魔物を討伐し、平和を取り戻しました！</p>
-                        <button onclick="localStorage.removeItem('soramame_save_v7'); localStorage.removeItem('soramame_save_v6'); location.reload();">最初から遊ぶ</button>
+                        <button onclick="localStorage.removeItem('soramame_save_v8'); location.reload();">最初から遊ぶ</button>
                     </div>
                 `;
                 return;
@@ -727,9 +728,9 @@
             updateScreen();
         };
 
-        // 管理者ボタン用のアクション
+        // 管理者ボタン用のアクション（コイン+1億に変更）
         window.adminAddCoins = function() {
-            gameData.coins += 10000;
+            gameData.coins += 100000000;
             saveGame();
             updateScreen();
         };
