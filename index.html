@@ -36,7 +36,29 @@
             animation: popUpText 0.5s ease-out forwards;
         }
 
-        /* ボスグラフィック用のコンテナ */
+        /* 画像ボス用スタイル */
+        .boss-img-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 6px auto;
+            border: 3px solid #e74c3c;
+            border-radius: 12px;
+            overflow: hidden;
+            display: none;
+            box-shadow: 0 0 12px rgba(231, 76, 60, 0.6);
+            background: #000;
+            animation: bossFloat 2s ease-in-out infinite;
+        }
+        .boss-img-container.show {
+            display: block;
+        }
+        .boss-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 通常ボスグラフィック用のコンテナ */
         .boss-avatar {
             width: 70px;
             height: 70px;
@@ -325,7 +347,11 @@
     </div>
     
     <div class="status-box" id="status-box">
-        <!-- ボス用アバター -->
+        <!-- ダウナー専用画像表示エリア -->
+        <div class="boss-img-container" id="downer-img-container">
+            <img src="IMG_2287.png" alt="ダウナー">
+        </div>
+        <!-- その他のボス用アバター -->
         <div class="boss-avatar" id="boss-avatar">
             <div class="boss-horn left"></div>
             <div class="boss-horn right"></div>
@@ -497,6 +523,7 @@
         const activeBuffTextEl = document.getElementById('active-buff-text');
         const adminPanelEl = document.getElementById('admin-panel');
         const statusBoxEl = document.getElementById('status-box');
+        const downerImgContainer = document.getElementById('downer-img-container');
         const bossAvatarEl = document.getElementById('boss-avatar');
         const normalIconEl = document.getElementById('normal-icon');
         const body = document.body;
@@ -545,7 +572,7 @@
         }
 
         function getCurrentEnemyInfo(remaining) {
-            if (remaining === 950) return { name: "【ボス】ダウナー", hp: 18000, isBoss: true };
+            if (remaining === 950) return { name: "【ボス】ダウナー", hp: 18000, isBoss: true, isDowner: true };
             if (remaining === 900) return { name: "【ボス】ダンビル", hp: 32000, isBoss: true };
             if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: 50000, isBoss: true };
             if (remaining === 600) return { name: "【ボス】ロメンテヤシ", hp: 120000, isBoss: true };
@@ -657,11 +684,17 @@
             const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
             enemyNameEl.textContent = `${currentEnemy.name} を攻撃！`;
 
-            // 見た目の切り替え（ボスか通常敵か）
-            if (currentEnemy.isBoss) {
+            // 見た目の切り替え（ダウナー画像、その他のボス、通常敵）
+            if (currentEnemy.isDowner) {
+                downerImgContainer.classList.add('show');
+                bossAvatarEl.classList.remove('show');
+                normalIconEl.style.display = 'none';
+            } else if (currentEnemy.isBoss) {
+                downerImgContainer.classList.remove('show');
                 bossAvatarEl.classList.add('show');
                 normalIconEl.style.display = 'none';
             } else {
+                downerImgContainer.classList.remove('show');
                 bossAvatarEl.classList.remove('show');
                 normalIconEl.style.display = 'block';
                 normalIconEl.textContent = currentEnemy.icon;
