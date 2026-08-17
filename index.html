@@ -660,11 +660,11 @@
 
         const trueStageEnemies = [];
         const baseTrueList = [
-            { name: "【裏】スクイーズ", hp: 10000000, icon: "🟢", isBoss: true, atk: 5, eva: 10, element: "fire" },
-            { name: "【裏】ハイオーク", hp: 15000000, icon: "🐗", isBoss: true, atk: 8, eva: 10, element: "ice" },
-            { name: "【裏】ペガサス", hp: 20000000, icon: "🦄", isBoss: true, atk: 10, eva: 25, element: "none" },
-            { name: "【裏】グリフィン", hp: 30000000, icon: "🦁", isBoss: true, atk: 15, eva: 15, element: "fire" },
-            { name: "【裏】ヒドラドラゴン", hp: 50000000, icon: "🐉", isBoss: true, atk: 20, eva: 20, element: "ice" }
+            { name: "【裏】スクイーズ", hp: 10000000, icon: "🟢", isBoss: true, atk: 17, eva: 10, element: "fire" },
+            { name: "【裏】ハイオーク", hp: 15000000, icon: "🐗", isBoss: true, atk: 17, eva: 10, element: "ice" },
+            { name: "【裏】ペガサス", hp: 20000000, icon: "🦄", isBoss: true, atk: 17, eva: 25, element: "none" },
+            { name: "【裏】グリフィン", hp: 30000000, icon: "🦁", isBoss: true, atk: 17, eva: 15, element: "fire" },
+            { name: "【裏】ヒドラドラゴン", hp: 50000000, icon: "🐉", isBoss: true, atk: 17, eva: 20, element: "ice" }
         ];
 
         const secretBossData = {
@@ -689,7 +689,7 @@
                     hp: sb.hp,
                     icon: "👑",
                     isBoss: true,
-                    atk: 40,
+                    atk: 17,
                     eva: 25,
                     element: "none"
                 });
@@ -699,7 +699,8 @@
                 let groupIndex = Math.floor(i / 5);
                 trueStageEnemies.push({ 
                     ...e, 
-                    hp: e.hp + (groupIndex * 2000000)
+                    hp: e.hp + (groupIndex * 2000000),
+                    atk: 17
                 });
             }
         }
@@ -709,7 +710,7 @@
             icon: "👑", 
             isBoss: true, 
             isGrandBoss: true, 
-            atk: 60, 
+            atk: 17, 
             eva: 35, 
             element: "dark" 
         });
@@ -1367,6 +1368,7 @@
                 if (!confirm("【裏ステージ突入】\nこれより強さを引き継いだまま、全1000体の真の裏ステージへ挑戦しますか？")) return;
                 gameData.isTrueStageActive = true;
                 gameData.trueStageProgress = 0;
+                gameData.coins += 1500000000; // 裏ステージに入った時に15億コイン獲得
                 gameData.playerHp = gameData.playerMaxHp;
                 gameData.playerMp = gameData.playerMaxMp;
                 const firstE = getCurrentEnemyInfo();
