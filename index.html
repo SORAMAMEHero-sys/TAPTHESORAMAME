@@ -412,7 +412,7 @@
     <!-- スタート画面オーバーレイ -->
     <div id="start-screen">
         <h1>進め！そらまめ軍団</h1>
-        <p>魔物を討伐して世界を救おう！</p>
+        <p>魔物を討伐して世界を救おう！ (v18 Update)</p>
         <button id="game-start-btn">ゲームを開始</button>
     </div>
 
@@ -469,7 +469,7 @@
 
     <h1>進め！そらまめ軍団</h1>
     <div class="header-area">
-        <div class="author">作者: そらまめゲームズ & Gemini</div>
+        <div class="author">作者: そらまめゲームズ & Gemini (v18)</div>
         <button class="hard-reset-btn" onclick="hardReset()">完全初期化</button>
     </div>
     
@@ -602,7 +602,7 @@
     </div>
 
     <script>
-        const SAVE_KEY = 'soramame_save_v17';
+        const SAVE_KEY = 'soramame_save_v18';
 
         let gameData = {
             enemiesRemaining: 1000,
@@ -638,7 +638,8 @@
                 "高級薬": 0,
                 "3000年の歴史の薬": 0,
                 "キャンディソーダ": 0,
-                "凝縮砂糖水": 0
+                "凝縮砂糖水": 0,
+                "超回復エリクサー": 0
             },
             equipped: [null, null, null],
             skills: [],
@@ -781,7 +782,7 @@
                     const parsed = JSON.parse(saved);
                     gameData = { ...gameData, ...parsed };
                     if (!gameData.consumables) {
-                        gameData.consumables = { "薬草": 0, "安物の薬": 0, "一般的な薬": 0, "高級薬": 0, "3000年の歴史の薬": 0, "キャンディソーダ": 0, "凝縮砂糖水": 0 };
+                        gameData.consumables = { "薬草": 0, "安物の薬": 0, "一般的な薬": 0, "高級薬": 0, "3000年の歴史の薬": 0, "キャンディソーダ": 0, "凝縮砂糖水": 0, "超回復エリクサー": 0 };
                     }
                 } catch(e) {
                     console.log("セーブデータの読み込みに失敗しました");
@@ -805,7 +806,7 @@
         };
 
         function getCoinReward(remaining) {
-            if (gameData.isTrueStageActive) return 1500000000; // 裏ステージは15億コイン
+            if (gameData.isTrueStageActive) return 1500000000;
             if (remaining > 950) return 1;
             if (remaining > 800) return 2;
             if (remaining > 700) return 3;
@@ -899,12 +900,13 @@
             const rand = Math.random() * 100;
             let droppedSkillName = "";
 
-            if (rand < 30) droppedSkillName = "タレット";
-            else if (rand < 50) droppedSkillName = "クリティカル";
-            else if (rand < 65) droppedSkillName = "極クリティカル";
-            else if (rand < 80) droppedSkillName = "コインフィーバー";
-            else if (rand < 95) droppedSkillName = "ドラゴンキラー";
-            else droppedSkillName = "新型タレット";
+            if (rand < 25) droppedSkillName = "タレット";
+            else if (rand < 45) droppedSkillName = "クリティカル";
+            else if (rand < 60) droppedSkillName = "極クリティカル";
+            else if (rand < 75) droppedSkillName = "コインフィーバー";
+            else if (rand < 88) droppedSkillName = "ドラゴンキラー";
+            else if (rand < 95) droppedSkillName = "新型タレット";
+            else droppedSkillName = "超自動バリスタ";
 
             const hasInSkills = gameData.skills.some(s => s.name === droppedSkillName);
             const hasInEquipped = gameData.equippedSkills.some(s => s && s.name === droppedSkillName);
@@ -918,6 +920,7 @@
                 else if (droppedSkillName === "コインフィーバー") { desc = "40%でコイン2倍獲得"; cooldown = "撃破時"; }
                 else if (droppedSkillName === "ドラゴンキラー") { desc = "ドラゴンに対して1.5倍"; cooldown = "常時"; }
                 else if (droppedSkillName === "新型タレット") { desc = "1秒に1回自動タップ"; cooldown = "1秒"; }
+                else if (droppedSkillName === "超自動バリスタ") { desc = "0.5秒に1回自動タップ"; cooldown = "0.5秒"; }
 
                 gameData.skills.push({ name: droppedSkillName, desc: desc, cooldown: cooldown });
             }
@@ -1146,6 +1149,7 @@
                     else if (name === "3000年の歴史の薬") desc = "HP全回復";
                     else if (name === "キャンディソーダ") desc = "MP+10回復";
                     else if (name === "凝縮砂糖水") desc = "MP+30回復";
+                    else if (name === "超回復エリクサー") desc = "HP・MP全回復";
 
                     html += `
                         <div class="inv-item">
@@ -1225,6 +1229,11 @@
             } else if (itemName === "凝縮砂糖水") {
                 if (gameData.playerMp >= gameData.playerMaxMp) { alert("MPはすでに満タンです！"); return; }
                 gameData.playerMp = Math.min(gameData.playerMaxMp, gameData.playerMp + 30);
+                used = true;
+            } else if (itemName === "超回復エリクサー") {
+                if (gameData.playerHp >= gameData.playerMaxHp && gameData.playerMp >= gameData.playerMaxMp) { alert("HP・MPはすでに満タンです！"); return; }
+                gameData.playerHp = gameData.playerMaxHp;
+                gameData.playerMp = gameData.playerMaxMp;
                 used = true;
             }
 
@@ -1327,7 +1336,8 @@
                 { name: "極クリティカル", desc: "1%の確率で6倍ダメージ", cooldown: "常時" },
                 { name: "コインフィーバー", desc: "40%でコイン2倍獲得", cooldown: "撃破時" },
                 { name: "ドラゴンキラー", desc: "ドラゴンに対して1.5倍", cooldown: "常時" },
-                { name: "新型タレット", desc: "1秒に1回自動タップ", cooldown: "1秒" }
+                { name: "新型タレット", desc: "1秒に1回自動タップ", cooldown: "1秒" },
+                { name: "超自動バリスタ", desc: "0.5秒に1回自動タップ", cooldown: "0.5秒" }
             ];
             allSkills.forEach(s => {
                 const exists = gameData.skills.some(item => item.name === s.name) || gameData.equippedSkills.some(item => item && item.name === s.name);
@@ -1594,6 +1604,9 @@
             if (gameStarted && !gameData.isStopped && gameData.equippedSkills.some(s => s && s.name === "新型タレット")) performAttack();
         }, 1000);
         setInterval(() => {
+            if (gameStarted && !gameData.isStopped && gameData.equippedSkills.some(s => s && s.name === "超自動バリスタ")) performAttack();
+        }, 500);
+        setInterval(() => {
             if (gameStarted && !gameData.isStopped) enemyAttackAction();
         }, 10000);
 
@@ -1616,6 +1629,7 @@
             const costGen = Math.round(lvl * 7.5);
             const costSoda = Math.round(lvl);
             const costSugar = Math.round(lvl * 15);
+            const costElixir = Math.round(lvl * 30);
 
             listEl.innerHTML = `
                 <div class="inventory-list" style="max-height:250px;">
@@ -1634,6 +1648,10 @@
                     <div class="inv-item">
                         <span>🧪 凝縮砂糖水 (MP+30)<br><small>価格: 💎${costSugar}ルビー</small></span>
                         <button onclick="buyShopItem('凝縮砂糖水', ${costSugar})">買う</button>
+                    </div>
+                    <div class="inv-item">
+                        <span>✨ 超回復エリクサー (全回復)<br><small>価格: 💎${costElixir}ルビー</small></span>
+                        <button onclick="buyShopItem('超回復エリクサー', ${costElixir})">買う</button>
                     </div>
                 </div>
             `;
