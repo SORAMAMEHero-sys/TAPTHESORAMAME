@@ -92,6 +92,32 @@
             background-color: #e64a19;
         }
 
+        /* モーダルウィンドウ共通 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 10001;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 340px;
+            text-align: left;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-content h3 {
+            margin-top: 0;
+            text-align: center;
+            color: #333;
+        }
+
         /* 通常ボスグラフィック用のコンテナ */
         .boss-avatar {
             width: 70px;
@@ -394,6 +420,53 @@
     <audio id="bgm-normal" src="BonDance.mp3" loop preload="auto"></audio>
     <audio id="bgm-boss" src="Brandishing_Evil.mp3" loop preload="auto"></audio>
 
+    <!-- SHOPモーダル -->
+    <div id="shop-modal" class="modal">
+        <div class="modal-content">
+            <h3>🛒 ショップ</h3>
+            <div id="shop-items-list"></div>
+            <div style="text-align:center; margin-top:15px;">
+                <button class="action-btn" onclick="closeShopModal()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 魔法メニューモーダル -->
+    <div id="magic-modal" class="modal">
+        <div class="modal-content">
+            <h3>✨ 魔法メニュー</h3>
+            <div style="font-size:0.8rem; color:#555; text-align:center; margin-bottom:10px;">
+                所持MP: <span id="modal-mp-text">0</span> / <span id="modal-max-mp-text">0</span>
+            </div>
+            <div class="inventory-list" style="max-height: 200px;">
+                <div class="inv-item" style="flex-direction:column; align-items:flex-start; gap:2px; padding:6px;">
+                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                        <strong>🔥 ファイヤ (火)</strong>
+                        <button onclick="castMagic('fire')">詠唱 (3MP)</button>
+                    </div>
+                    <span style="font-size:0.7rem; color:#666;">単体に135ダメージ (氷属性の敵に弱点)</span>
+                </div>
+                <div class="inv-item" style="flex-direction:column; align-items:flex-start; gap:2px; padding:6px;">
+                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                        <strong>❄️ アイス (氷)</strong>
+                        <button onclick="castMagic('ice')">詠唱 (3MP)</button>
+                    </div>
+                    <span style="font-size:0.7rem; color:#666;">単体に135ダメージ (火属性の敵に弱点)</span>
+                </div>
+                <div class="inv-item" style="flex-direction:column; align-items:flex-start; gap:2px; padding:6px;">
+                    <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                        <strong>🌪️ 扇子アタック (風)</strong>
+                        <button onclick="castMagic('fan')">詠唱 (5MP)</button>
+                    </div>
+                    <span style="font-size:0.7rem; color:#666;">全体（現在の敵）に70ダメージ</span>
+                </div>
+            </div>
+            <div style="text-align:center; margin-top:15px;">
+                <button class="action-btn" onclick="closeMagicModal()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
     <h1>進め！そらまめ軍団</h1>
     <div class="header-area">
         <div class="author">作者: そらまめゲームズ & Gemini</div>
@@ -417,7 +490,9 @@
 
         <!-- 主人公のステータス表示 -->
         <div class="player-status-area" id="player-status-area">
-            ❤️ HP: <span id="player-hp">30</span>/<span id="player-max-hp">30</span> | ⚔️ 攻撃: <span id="player-atk">1</span> | 💨 回避: <span id="player-eva">5</span>%
+            ❤️ HP: <span id="player-hp">30</span>/<span id="player-max-hp">30</span><br>
+            💙 MP: <span id="player-mp">10</span>/<span id="player-max-mp">10</span><br>
+            ⚔️ 攻撃: <span id="player-atk">1</span> | 💨 回避: <span id="player-eva">5</span>%
         </div>
     </div>
 
@@ -449,6 +524,11 @@
         <div class="button-row">
             <button class="action-btn" id="upgrade-button">レベルアップ (Lv.<span id="player-level">1</span>) (🪙<span id="upgrade-cost">3</span>)</button>
             <button class="action-btn" id="restart-button" style="background-color: #dc3545;">リスタート</button>
+        </div>
+        <div class="button-row">
+            <button class="action-btn" id="stop-button" style="background-color: #ffc107; color: #000; font-weight:bold;">⏸️ Stop (ON/OFF)</button>
+            <button class="action-btn" id="shop-button" style="background-color: #fd7e14; display:none;">🛒 SHOP</button>
+            <button class="action-btn" id="magic-button" style="background-color: #6f42c1;">✨ 魔法</button>
         </div>
         <div class="button-row">
             <button class="action-btn" id="gacha-1-btn" style="background-color: #e83e8c;">ガチャ1回 (💎10)</button>
@@ -508,7 +588,7 @@
     </div>
 
     <div class="section-box">
-        <h3>🎒 所持アイテム一覧</h3>
+        <h3>🎒 所持アイテム一覧 (回復・消耗品)</h3>
         <div class="inventory-list" id="inventory-list">
             <div style="text-align:center; color:#888; font-size:0.8rem; padding:10px;">まだアイテムはありません</div>
         </div>
@@ -522,7 +602,7 @@
     </div>
 
     <script>
-        const SAVE_KEY = 'soramame_save_v14';
+        const SAVE_KEY = 'soramame_save_v15';
 
         let gameData = {
             enemiesRemaining: 1000,
@@ -534,6 +614,8 @@
             level: 1,
             playerHp: 30,
             playerMaxHp: 30,
+            playerMp: 10,
+            playerMaxMp: 10,
             attackPower: 1,
             evasion: 5,
             upgradeCost: 3,
@@ -547,7 +629,18 @@
             isTrueStageActive: false,
             trueStageProgress: 0,
             lastRestartTime: 0,
+            isStopped: false,
+
             inventory: [],
+            consumables: {
+                "薬草": 0,
+                "安物の薬": 0,
+                "一般的な薬": 0,
+                "高級薬": 0,
+                "3000年の歴史の薬": 0,
+                "キャンディソーダ": 0,
+                "凝縮砂糖水": 0
+            },
             equipped: [null, null, null],
             skills: [],
             equippedSkills: [null, null, null],
@@ -559,21 +652,20 @@
         const COOLDOWN_TIME = 15 * 60 * 1000;
 
         const normalEnemies = [
-            { name: "スライム", hp: 10, icon: "🟢", atk: 1, eva: 0 },
-            { name: "ゴブリン", hp: 25, icon: "👺", atk: 1, eva: 0 },
-            { name: "オオカミ", hp: 50, icon: "🐺", atk: 2, eva: 0 },
-            { name: "魔物のおおきい鳥", hp: 100, icon: "🦅", atk: 1, eva: 20 },
-            { name: "ドラゴン", hp: 250, icon: "🐉", atk: 2, eva: 10 }
+            { name: "スライム", hp: 10, icon: "🟢", atk: 1, eva: 0, element: "fire" },
+            { name: "ゴブリン", hp: 25, icon: "👺", atk: 1, eva: 0, element: "ice" },
+            { name: "オオカミ", hp: 50, icon: "🐺", atk: 2, eva: 0, element: "none" },
+            { name: "魔物のおおきい鳥", hp: 100, icon: "🦅", atk: 1, eva: 20, element: "ice" },
+            { name: "ドラゴン", hp: 250, icon: "🐉", atk: 2, eva: 10, element: "fire" }
         ];
 
-        // 真・裏ステージ（全1000体の構成）
         const trueStageEnemies = [];
         const baseTrueList = [
-            { name: "【裏】スクイーズ", hp: 10000000, icon: "🟢", isBoss: true, atk: 5, eva: 10 },
-            { name: "【裏】ハイオーク", hp: 15000000, icon: "🐗", isBoss: true, atk: 8, eva: 10 },
-            { name: "【裏】ペガサス", hp: 20000000, icon: "🦄", isBoss: true, atk: 10, eva: 25 },
-            { name: "【裏】グリフィン", hp: 30000000, icon: "🦁", isBoss: true, atk: 15, eva: 15 },
-            { name: "【裏】ヒドラドラゴン", hp: 50000000, icon: "🐉", isBoss: true, atk: 20, eva: 20 }
+            { name: "【裏】スクイーズ", hp: 10000000, icon: "🟢", isBoss: true, atk: 5, eva: 10, element: "fire" },
+            { name: "【裏】ハイオーク", hp: 15000000, icon: "🐗", isBoss: true, atk: 8, eva: 10, element: "ice" },
+            { name: "【裏】ペガサス", hp: 20000000, icon: "🦄", isBoss: true, atk: 10, eva: 25, element: "none" },
+            { name: "【裏】グリフィン", hp: 30000000, icon: "🦁", isBoss: true, atk: 15, eva: 15, element: "fire" },
+            { name: "【裏】ヒドラドラゴン", hp: 50000000, icon: "🐉", isBoss: true, atk: 20, eva: 20, element: "ice" }
         ];
         for (let i = 0; i < 199; i++) {
             baseTrueList.forEach(e => {
@@ -583,7 +675,7 @@
                 });
             });
         }
-        trueStageEnemies.push({ name: "👑【真・ラスボス】魔王グランデ", hp: 5000000000, icon: "👑", isBoss: true, isGrandBoss: true, atk: 50, eva: 30 });
+        trueStageEnemies.push({ name: "👑【真・ラスボス】魔王グランデ", hp: 5000000000, icon: "👑", isBoss: true, isGrandBoss: true, atk: 50, eva: 30, element: "none" });
 
         let gameStarted = false;
         const bgmNormal = document.getElementById('bgm-normal');
@@ -609,6 +701,8 @@
         const playerLevelEl = document.getElementById('player-level');
         const playerHpEl = document.getElementById('player-hp');
         const playerMaxHpEl = document.getElementById('player-max-hp');
+        const playerMpEl = document.getElementById('player-mp');
+        const playerMaxMpEl = document.getElementById('player-max-mp');
         const playerAtkEl = document.getElementById('player-atk');
         const playerEvaEl = document.getElementById('player-eva');
         const exchangeCostEl = document.getElementById('exchange-cost');
@@ -622,6 +716,9 @@
         const skipCostEl = document.getElementById('skip-cost');
         const gacha1Btn = document.getElementById('gacha-1-btn');
         const gacha10Btn = document.getElementById('gacha-10-btn');
+        const stopButton = document.getElementById('stop-button');
+        const shopButton = document.getElementById('shop-button');
+        const magicButton = document.getElementById('magic-button');
         const inventoryListEl = document.getElementById('inventory-list');
         const skillInventoryListEl = document.getElementById('skill-inventory-list');
         const activeBuffTextEl = document.getElementById('active-buff-text');
@@ -631,6 +728,8 @@
         const normalIconEl = document.getElementById('normal-icon');
         const startScreenEl = document.getElementById('start-screen');
         const gameStartBtn = document.getElementById('game-start-btn');
+        const shopModal = document.getElementById('shop-modal');
+        const magicModal = document.getElementById('magic-modal');
         const body = document.body;
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -644,6 +743,9 @@
                 try {
                     const parsed = JSON.parse(saved);
                     gameData = { ...gameData, ...parsed };
+                    if (!gameData.consumables) {
+                        gameData.consumables = { "薬草": 0, "安物の薬": 0, "一般的な薬": 0, "高級薬": 0, "3000年の歴史の薬": 0, "キャンディソーダ": 0, "凝縮砂糖水": 0 };
+                    }
                 } catch(e) {
                     console.log("セーブデータの読み込みに失敗しました");
                 }
@@ -686,15 +788,15 @@
             }
 
             const remaining = gameData.enemiesRemaining;
-            if (remaining === 950) return { name: "【ボス】ダウナー", hp: 18000, isBoss: true, atk: 3, eva: 5 };
-            if (remaining === 900) return { name: "【ボス】ダンビル", hp: 32000, isBoss: true, atk: 4, eva: 5 };
-            if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: 50000, isBoss: true, atk: 5, eva: 10 };
-            if (remaining === 600) return { name: "【ボス】ロメンテヤシ", hp: 120000, isBoss: true, atk: 6, eva: 10 };
-            if (remaining === 500) return { name: "【ボス】ソクラゼウス", hp: 150000, isBoss: true, atk: 8, eva: 15 };
-            if (remaining === 350) return { name: "【ボス】ダウナー EX", hp: 400000, isBoss: true, atk: 10, eva: 15 };
-            if (remaining === 100) return { name: "【ボス】終焉の支配者", hp: 1200000, isBoss: true, atk: 15, eva: 20 };
-            if (remaining === 50)  return { name: "【ボス】ラストビュオス", hp: 3500000, isBoss: true, atk: 20, eva: 20 };
-            if (remaining === 1)   return { name: "👑【ラスボス】そらまめ", hp: 10000000, isBoss: true, atk: 30, eva: 25 };
+            if (remaining === 950) return { name: "【ボス】ダウナー", hp: 18000, isBoss: true, atk: 3, eva: 5, element: "fire" };
+            if (remaining === 900) return { name: "【ボス】ダンビル", hp: 32000, isBoss: true, atk: 4, eva: 5, element: "ice" };
+            if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: 50000, isBoss: true, atk: 5, eva: 10, element: "none" };
+            if (remaining === 600) return { name: "【ボス】ロメンテヤシ", hp: 120000, isBoss: true, atk: 6, eva: 10, element: "fire" };
+            if (remaining === 500) return { name: "【ボス】ソクラゼウス", hp: 150000, isBoss: true, atk: 8, eva: 15, element: "ice" };
+            if (remaining === 350) return { name: "【ボス】ダウナー EX", hp: 400000, isBoss: true, atk: 10, eva: 15, element: "fire" };
+            if (remaining === 100) return { name: "【ボス】終焉の支配者", hp: 1200000, isBoss: true, atk: 15, eva: 20, element: "none" };
+            if (remaining === 50)  return { name: "【ボス】ラストビュオス", hp: 3500000, isBoss: true, atk: 20, eva: 20, element: "ice" };
+            if (remaining === 1)   return { name: "👑【ラスボス】そらまめ", hp: 10000000, isBoss: true, atk: 30, eva: 25, element: "none" };
 
             const index = gameData.defeatCount % normalEnemies.length;
             const baseEnemy = normalEnemies[index];
@@ -702,7 +804,7 @@
             const groupLevel = Math.floor(gameData.defeatCount / 5);
             const scaledHp = Math.floor((baseEnemy.hp + (groupLevel * 250)) * multiplier);
 
-            return { name: baseEnemy.name, hp: scaledHp, icon: baseEnemy.icon, isBoss: false, atk: baseEnemy.atk + Math.floor(groupLevel * 0.5), eva: baseEnemy.eva };
+            return { name: baseEnemy.name, hp: scaledHp, icon: baseEnemy.icon, isBoss: false, atk: baseEnemy.atk + Math.floor(groupLevel * 0.5), eva: baseEnemy.eva, element: baseEnemy.element };
         }
 
         function calculateTotalAttack() {
@@ -817,7 +919,8 @@
             }
 
             const currentEnemy = getCurrentEnemyInfo();
-            enemyNameEl.textContent = `${currentEnemy.name} を攻撃！`;
+            let stateSuffix = gameData.isStopped ? " ⏸️【Stop中】" : "";
+            enemyNameEl.textContent = `${currentEnemy.name} を攻撃！${stateSuffix}`;
 
             if (gameData.isTrueStageActive) {
                 modeTitleLabelEl.textContent = "裏ステージ残り:";
@@ -846,9 +949,10 @@
             hpBarEl.style.width = percentage + "%";
             hpTextEl.textContent = `HP: ${gameData.enemyHp} / ${gameData.enemyMaxHp}`;
             
-            // プレイヤーHP等の更新
             playerHpEl.textContent = gameData.playerHp;
             playerMaxHpEl.textContent = gameData.playerMaxHp;
+            playerMpEl.textContent = gameData.playerMp;
+            playerMaxMpEl.textContent = gameData.playerMaxMp;
             playerAtkEl.textContent = gameData.attackPower;
             playerEvaEl.textContent = gameData.evasion;
             playerLevelEl.textContent = gameData.level;
@@ -864,6 +968,24 @@
             exchangeCostEl.textContent = exchangeCost;
 
             bgmToggleBtn.textContent = gameData.bgmEnabled ? "🎵 BGM: ON" : "🔇 BGM: OFF";
+
+            if (gameData.level >= 3) {
+                shopButton.style.display = "inline-block";
+            } else {
+                shopButton.style.display = "none";
+            }
+
+            if (gameData.isStopped) {
+                stopButton.style.backgroundColor = "#28a745";
+                stopButton.style.color = "#fff";
+                stopButton.textContent = "▶️ 再開 (Stop中)";
+                attackButton.style.opacity = "0.5";
+            } else {
+                stopButton.style.backgroundColor = "#ffc107";
+                stopButton.style.color = "#000";
+                stopButton.textContent = "⏸️ Stop (ON/OFF)";
+                attackButton.style.opacity = "1";
+            }
             
             if (gameData.bgmEnabled && gameStarted) {
                 if (currentEnemy.isBoss) {
@@ -905,7 +1027,7 @@
             let showSkipButton = false;
 
             if (gameData.isTrueStageActive) {
-                canRestart = true; // 裏ステージはいつでもリスタート可能に
+                canRestart = true;
                 restartMessage = "裏ステージ最初からやり直す";
             } else if (gameData.defeatCount < gameData.maxDefeatCount) {
                 canRestart = false;
@@ -971,21 +1093,47 @@
         }
 
         function updateInventoryUI() {
-            if (gameData.inventory.length === 0) {
-                inventoryListEl.innerHTML = `<div style="text-align:center; color:#888; font-size:0.8rem; padding:5px;">まだアイテムはありません</div>`;
-                return;
-            }
-
             let html = "";
+            let hasAny = false;
+
+            const cKeys = Object.keys(gameData.consumables);
+            cKeys.forEach(name => {
+                const qty = gameData.consumables[name];
+                if (qty > 0) {
+                    hasAny = true;
+                    let desc = "";
+                    if (name === "薬草") desc = "HP+15回復";
+                    else if (name === "安物の薬") desc = "HP+30回復";
+                    else if (name === "一般的な薬") desc = "HP+50回復";
+                    else if (name === "高級薬") desc = "HP+100回復";
+                    else if (name === "3000年の歴史の薬") desc = "HP全回復";
+                    else if (name === "キャンディソーダ") desc = "MP+10回復";
+                    else if (name === "凝縮砂糖水") desc = "MP+30回復";
+
+                    html += `
+                        <div class="inv-item">
+                            <span>📦 ${name} (x${qty})<br><small style="color:#666;">${desc}</small></span>
+                            <button onclick="useConsumable('${name}')">使う</button>
+                        </div>
+                    `;
+                }
+            });
+
             gameData.inventory.forEach((item, index) => {
+                hasAny = true;
                 html += `
                     <div class="inv-item">
-                        <span>${item.name}</span>
+                        <span>⚔️ ${item.name} (装備品)</span>
                         <button onclick="equipItem(${index})">装備する</button>
                     </div>
                 `;
             });
-            inventoryListEl.innerHTML = html;
+
+            if (!hasAny) {
+                inventoryListEl.innerHTML = `<div style="text-align:center; color:#888; font-size:0.8rem; padding:5px;">まだアイテムはありません</div>`;
+            } else {
+                inventoryListEl.innerHTML = html;
+            }
         }
 
         function updateSkillInventoryUI() {
@@ -1008,6 +1156,48 @@
             });
             skillInventoryListEl.innerHTML = html;
         }
+
+        window.useConsumable = function(itemName) {
+            if (gameData.consumables[itemName] <= 0) return;
+
+            let used = false;
+            if (itemName === "薬草") {
+                if (gameData.playerHp >= gameData.playerMaxHp) { alert("HPはすでに満タンです！"); return; }
+                gameData.playerHp = Math.min(gameData.playerMaxHp, gameData.playerHp + 15);
+                used = true;
+            } else if (itemName === "安物の薬") {
+                if (gameData.playerHp >= gameData.playerMaxHp) { alert("HPはすでに満タンです！"); return; }
+                gameData.playerHp = Math.min(gameData.playerMaxHp, gameData.playerHp + 30);
+                used = true;
+            } else if (itemName === "一般的な薬") {
+                if (gameData.playerHp >= gameData.playerMaxHp) { alert("HPはすでに満タンです！"); return; }
+                gameData.playerHp = Math.min(gameData.playerMaxHp, gameData.playerHp + 50);
+                used = true;
+            } else if (itemName === "高級薬") {
+                if (gameData.playerHp >= gameData.playerMaxHp) { alert("HPはすでに満タンです！"); return; }
+                gameData.playerHp = Math.min(gameData.playerMaxHp, gameData.playerHp + 100);
+                used = true;
+            } else if (itemName === "3000年の歴史の薬") {
+                if (gameData.playerHp >= gameData.playerMaxHp) { alert("HPはすでに満タンです！"); return; }
+                gameData.playerHp = gameData.playerMaxHp;
+                used = true;
+            } else if (itemName === "キャンディソーダ") {
+                if (gameData.playerMp >= gameData.playerMaxMp) { alert("MPはすでに満タンです！"); return; }
+                gameData.playerMp = Math.min(gameData.playerMaxMp, gameData.playerMp + 10);
+                used = true;
+            } else if (itemName === "凝縮砂糖水") {
+                if (gameData.playerMp >= gameData.playerMaxMp) { alert("MPはすでに満タンです！"); return; }
+                gameData.playerMp = Math.min(gameData.playerMaxMp, gameData.playerMp + 30);
+                used = true;
+            }
+
+            if (used) {
+                gameData.consumables[itemName] -= 1;
+                showCritEffect(`✨ ${itemName}を使った！`);
+                saveGame();
+                updateScreen();
+            }
+        };
 
         window.equipItem = function(invIndex) {
             const item = gameData.inventory[invIndex];
@@ -1070,29 +1260,10 @@
             updateScreen();
         };
 
-        window.adminAddCoins = function() {
-            gameData.coins += 999999999;
-            saveGame();
-            updateScreen();
-        };
-
-        window.adminAddRubies = function() {
-            gameData.rubies += 999999999;
-            saveGame();
-            updateScreen();
-        };
-
-        window.adminAddStones = function() {
-            gameData.magicStones += 10;
-            saveGame();
-            updateScreen();
-        };
-
-        window.adminKillEnemy = function() {
-            gameData.enemyHp = 0;
-            performAttack();
-        };
-
+        window.adminAddCoins = function() { gameData.coins += 999999999; saveGame(); updateScreen(); };
+        window.adminAddRubies = function() { gameData.rubies += 999999999; saveGame(); updateScreen(); };
+        window.adminAddStones = function() { gameData.magicStones += 10; saveGame(); updateScreen(); };
+        window.adminKillEnemy = function() { gameData.enemyHp = 0; performAttack(); };
         window.adminSkip100 = function() {
             if (gameData.isTrueStageActive) {
                 gameData.trueStageProgress += 100;
@@ -1104,9 +1275,7 @@
             } else {
                 gameData.enemiesRemaining = Math.max(0, gameData.enemiesRemaining - 100);
                 gameData.defeatCount += 100;
-                if (gameData.defeatCount > gameData.maxDefeatCount) {
-                    gameData.maxDefeatCount = gameData.defeatCount;
-                }
+                if (gameData.defeatCount > gameData.maxDefeatCount) gameData.maxDefeatCount = gameData.defeatCount;
                 const currentEnemy = getCurrentEnemyInfo();
                 gameData.enemyMaxHp = currentEnemy.hp;
                 gameData.enemyHp = currentEnemy.hp;
@@ -1114,7 +1283,6 @@
             saveGame();
             updateScreen();
         };
-
         window.adminUnlockAllSkills = function() {
             const allSkills = [
                 { name: "タレット", desc: "3秒に1回自動タップ", cooldown: "3秒" },
@@ -1126,9 +1294,7 @@
             ];
             allSkills.forEach(s => {
                 const exists = gameData.skills.some(item => item.name === s.name) || gameData.equippedSkills.some(item => item && item.name === s.name);
-                if (!exists) {
-                    gameData.skills.push(s);
-                }
+                if (!exists) gameData.skills.push(s);
             });
             saveGame();
             updateScreen();
@@ -1136,10 +1302,7 @@
 
         function rollGacha(count) {
             const cost = count * 10;
-            if (gameData.rubies < cost) {
-                alert("ルビーが足りません！");
-                return;
-            }
+            if (gameData.rubies < cost) { alert("ルビーが足りません！"); return; }
             if (!confirm(count === 1 ? "💎10ルビーでガチャを1回引きますか？" : "💎100ルビーでガチャ10連を引きますか？")) return;
 
             gameData.rubies -= cost;
@@ -1168,6 +1331,7 @@
                 gameData.isTrueStageActive = true;
                 gameData.trueStageProgress = 0;
                 gameData.playerHp = gameData.playerMaxHp;
+                gameData.playerMp = gameData.playerMaxMp;
                 const firstE = getCurrentEnemyInfo();
                 gameData.enemyMaxHp = firstE.hp;
                 gameData.enemyHp = firstE.hp;
@@ -1183,10 +1347,9 @@
             gameData.coins = 0;
             gameData.clearRounds += 1;
             gameData.playerHp = gameData.playerMaxHp;
+            gameData.playerMp = gameData.playerMaxMp;
 
-            if (gameData.clearRounds >= 2) {
-                gameData.isTrueStageUnlocked = true;
-            }
+            if (gameData.clearRounds >= 2) gameData.isTrueStageUnlocked = true;
             
             const firstEnemy = getCurrentEnemyInfo();
             gameData.enemyMaxHp = firstEnemy.hp;
@@ -1198,6 +1361,7 @@
 
         function performAttack() {
             if (!gameStarted) return;
+            if (gameData.isStopped) return;
 
             if (!gameData.enemyHp) {
                 const currentEnemy = getCurrentEnemyInfo();
@@ -1232,7 +1396,6 @@
                 const currentEnemy = getCurrentEnemyInfo();
                 const wasBoss = currentEnemy.isBoss;
 
-                // 魔法石ドロップ判定（通常敵0.7%、ボスは確定）
                 if (wasBoss) {
                     gameData.magicStones += 1;
                 } else if (Math.random() < 0.007) {
@@ -1251,9 +1414,7 @@
                     gameData.rubies += 1;
                 }
 
-                if (wasBoss) {
-                    rollSkillDrop();
-                }
+                if (wasBoss) rollSkillDrop();
 
                 if (!gameData.isTrueStageActive && gameData.defeatCount > gameData.maxDefeatCount) {
                     gameData.maxDefeatCount = gameData.defeatCount;
@@ -1268,12 +1429,71 @@
             updateScreen();
         }
 
-        // 10秒ごとの敵の攻撃処理
+        window.castMagic = function(type) {
+            if (gameData.isStopped) { alert("Stop中は魔法を使えません！"); return; }
+            const currentEnemy = getCurrentEnemyInfo();
+
+            if (type === 'fire') {
+                if (gameData.playerMp < 3) { alert("MPが足りません！"); return; }
+                gameData.playerMp -= 3;
+                let dmg = 135;
+                if (currentEnemy.element === "ice") {
+                    dmg = Math.floor(dmg * 1.5);
+                    showCritEffect("🔥 弱点命中！大ダメージ！");
+                }
+                gameData.enemyHp -= dmg;
+                showCritEffect(`🔥 ファイヤ！ ${dmg}ダメージ`);
+            } else if (type === 'ice') {
+                if (gameData.playerMp < 3) { alert("MPが足りません！"); return; }
+                gameData.playerMp -= 3;
+                let dmg = 135;
+                if (currentEnemy.element === "fire") {
+                    dmg = Math.floor(dmg * 1.5);
+                    showCritEffect("❄️ 弱点命中！大ダメージ！");
+                }
+                gameData.enemyHp -= dmg;
+                showCritEffect(`❄️ アイス！ ${dmg}ダメージ`);
+            } else if (type === 'fan') {
+                if (gameData.playerMp < 5) { alert("MPが足りません！"); return; }
+                gameData.playerMp -= 5;
+                let dmg = 70;
+                gameData.enemyHp -= dmg;
+                showCritEffect(`🌪️ 扇子アタック！ ${dmg}ダメージ`);
+            }
+
+            if (gameData.enemyHp <= 0) {
+                let coinGain = getCoinReward(gameData.isTrueStageActive ? 0 : gameData.enemiesRemaining);
+                gameData.coins += coinGain;
+                const wasBoss = currentEnemy.isBoss;
+                if (wasBoss) {
+                    gameData.magicStones += 1;
+                    rollSkillDrop();
+                } else if (Math.random() < 0.007) {
+                    gameData.magicStones += 1;
+                }
+
+                if (gameData.isTrueStageActive) {
+                    gameData.trueStageProgress += 1;
+                } else {
+                    gameData.enemiesRemaining -= 1;
+                    gameData.defeatCount += 1;
+                }
+                const nextEnemy = getCurrentEnemyInfo();
+                gameData.enemyMaxHp = nextEnemy.hp;
+                gameData.enemyHp = nextEnemy.hp;
+            }
+
+            closeMagicModal();
+            saveGame();
+            updateScreen();
+        };
+
         function enemyAttackAction() {
             if (!gameStarted) return;
+            if (gameData.isStopped) return;
+            
             const currentEnemy = getCurrentEnemyInfo();
             
-            // 突進アニメーション
             bossAvatarEl.classList.add('enemy-rush-anim');
             normalIconEl.classList.add('enemy-rush-anim');
             setTimeout(() => {
@@ -1281,14 +1501,12 @@
                 normalIconEl.classList.remove('enemy-rush-anim');
             }, 300);
 
-            // 回避判定 (回避率の数値 = %)
             const evaChance = gameData.evasion;
             if (Math.random() * 100 < evaChance) {
                 showCritEffect("💨 回避！");
                 return;
             }
 
-            // ダメージ処理
             let dmg = currentEnemy.atk || 1;
             gameData.playerHp -= dmg;
             showCritEffect(`💔 ${dmg}ダメージを受けた！`);
@@ -1301,24 +1519,16 @@
             updateScreen();
         }
 
-        // 敗北時のペナルティ処理
         function handlePlayerDeath() {
             if (gameData.isTrueStageActive) {
-                // 裏ステージ：3体前に戻る
                 gameData.trueStageProgress = Math.max(0, gameData.trueStageProgress - 3);
                 alert("【敗北】裏ステージの少し手前に押し戻された… (3体戻り)");
             } else {
-                // 通常ステージ：10体前に戻る（10体前にボスがいる場合はボスの1つ後に戻る）
                 let newRemaining = Math.min(1000, gameData.enemiesRemaining + 10);
-                let newDefeat = Math.max(0, gameData.defeatCount - 10);
-                
-                // チェック：戻る範囲内にボスが含まれるか確認
-                // ボス配置位置：950, 900, 800, 600, 500, 350, 100, 50, 1
                 const bossRemainings = [950, 900, 800, 600, 500, 350, 100, 50, 1];
                 let adjustedRemaining = newRemaining;
                 
                 for (let bRem of bossRemainings) {
-                    // 現在位置より多く、戻り先（newRemaining）以下の位置にボスがいたら、ボスの直後（bRem - 1）にする
                     if (gameData.enemiesRemaining < bRem && newRemaining >= bRem) {
                         adjustedRemaining = bRem - 1;
                         break;
@@ -1330,8 +1540,8 @@
                 alert("【敗北】魔物に敗れ、手前まで押し戻された… (10体前へ)");
             }
 
-            // 復活時にHP全回復
             gameData.playerHp = gameData.playerMaxHp;
+            gameData.playerMp = gameData.playerMaxMp;
             const currentEnemy = getCurrentEnemyInfo();
             gameData.enemyMaxHp = currentEnemy.hp;
             gameData.enemyHp = currentEnemy.hp;
@@ -1339,27 +1549,82 @@
 
         attackButton.addEventListener('click', performAttack);
 
-        setInterval(() => { if (gameStarted) performAttack(); }, 2000);
+        setInterval(() => { if (gameStarted && !gameData.isStopped) performAttack(); }, 2000);
         setInterval(() => {
-            if (gameStarted && gameData.equippedSkills.some(s => s && s.name === "タレット")) performAttack();
+            if (gameStarted && !gameData.isStopped && gameData.equippedSkills.some(s => s && s.name === "タレット")) performAttack();
         }, 3000);
         setInterval(() => {
-            if (gameStarted && gameData.equippedSkills.some(s => s && s.name === "新型タレット")) performAttack();
+            if (gameStarted && !gameData.isStopped && gameData.equippedSkills.some(s => s && s.name === "新型タレット")) performAttack();
         }, 1000);
-
-        // 10秒ごとに敵が攻撃してくるタイマー
         setInterval(() => {
-            if (gameStarted) enemyAttackAction();
+            if (gameStarted && !gameData.isStopped) enemyAttackAction();
         }, 10000);
 
-        // レベルアップボタンの処理（上限100、段階式コスト＆ステータス上昇）
-        upgradeButton.addEventListener('click', () => {
-            if (gameData.level >= 100) {
-                alert("すでにレベルが上限（Lv.100）に達しています！");
-                return;
-            }
+        stopButton.addEventListener('click', () => {
+            gameData.isStopped = !gameData.isStopped;
+            saveGame();
+            updateScreen();
+        });
 
-            // コスト判定
+        shopButton.addEventListener('click', () => {
+            if (gameData.level < 3) { alert("ショップはレベル3で解放されます！"); return; }
+            openShopModal();
+        });
+
+        function openShopModal() {
+            const listEl = document.getElementById('shop-items-list');
+            const lvl = gameData.level;
+
+            const costHerb = Math.round(lvl * 3);
+            const costGen = Math.round(lvl * 7.5);
+            const costSoda = Math.round(lvl);
+            const costSugar = Math.round(lvl * 15);
+
+            listEl.innerHTML = `
+                <div class="inventory-list" style="max-height:250px;">
+                    <div class="inv-item">
+                        <span>🌿 薬草 (HP+15)<br><small>価格: 🪙${costHerb}コイン</small></span>
+                        <button onclick="buyShopItem('薬草', ${costHerb})">買う</button>
+                    </div>
+                    <div class="inv-item">
+                        <span>💊 一般的な薬 (HP+50)<br><small>価格: 🪙${costGen}コイン</small></span>
+                        <button onclick="buyShopItem('一般的な薬', ${costGen})">買う</button>
+                    </div>
+                    <div class="inv-item">
+                        <span>🥤 キャンディソーダ (MP+10)<br><small>価格: 🪙${costSoda}コイン</small></span>
+                        <button onclick="buyShopItem('キャンディソーダ', ${costSoda})">買う</button>
+                    </div>
+                    <div class="inv-item">
+                        <span>🧪 凝縮砂糖水 (MP+30)<br><small>価格: 🪙${costSugar}コイン</small></span>
+                        <button onclick="buyShopItem('凝縮砂糖水', ${costSugar})">買う</button>
+                    </div>
+                </div>
+            `;
+            shopModal.style.display = 'flex';
+        }
+
+        window.closeShopModal = function() { shopModal.style.display = 'none'; };
+
+        window.buyShopItem = function(itemName, cost) {
+            if (gameData.coins < cost) { alert("コインが足りません！"); return; }
+            gameData.coins -= cost;
+            gameData.consumables[itemName] = (gameData.consumables[itemName] || 0) + 1;
+            saveGame();
+            updateScreen();
+            openShopModal();
+        };
+
+        magicButton.addEventListener('click', () => {
+            document.getElementById('modal-mp-text').textContent = gameData.playerMp;
+            document.getElementById('modal-max-mp-text').textContent = gameData.playerMaxMp;
+            magicModal.style.display = 'flex';
+        });
+
+        window.closeMagicModal = function() { magicModal.style.display = 'none'; };
+
+        upgradeButton.addEventListener('click', () => {
+            if (gameData.level >= 100) { alert("すでにレベルが上限（Lv.100）に達しています！"); return; }
+
             let reqRubies = 0;
             let reqStones = 0;
             let currentLv = gameData.level;
@@ -1374,17 +1639,15 @@
                 return;
             }
 
-            // 支払い
             gameData.coins -= gameData.upgradeCost;
             gameData.rubies -= reqRubies;
             gameData.magicStones -= reqStones;
 
-            // ステータス上昇
             gameData.level += 1;
-            gameData.playerMaxHp += 5;
-            gameData.playerHp = gameData.playerMaxHp; // レベルアップ時にHP全快
+            gameData.playerMaxHp += 3;
+            gameData.playerMaxMp += 3;
             gameData.attackPower += 2;
-            gameData.evasion = Math.min(90, gameData.evasion + 1); // 回避率+1% (上限90%)
+            gameData.evasion = Math.min(90, gameData.evasion + 1);
             gameData.upgradeCost = Math.floor(gameData.upgradeCost * 1.35 + 5);
 
             saveGame();
@@ -1400,9 +1663,7 @@
                     saveGame();
                     updateScreen();
                 }
-            } else {
-                alert("コインが足りません！");
-            }
+            } else { alert("コインが足りません！"); }
         });
 
         bgmToggleBtn.addEventListener('click', () => {
@@ -1423,8 +1684,9 @@
                 "【 🔮 魔法石について 】\n" +
                 "・通常敵撃破時: 0.7%の確率でドロップ\n" +
                 "・ボス撃破時: 確定ドロップ\n\n" +
-                "【 ✨ スキル獲得について 】\n" +
-                "ボスを倒すとランダムで強力なスキルが手に入ります！（重複入手不可）"
+                "【 ✨ 魔法・ショップについて 】\n" +
+                "・レベル3でSHOPが解放されます。\n" +
+                "・魔法は相性があり、弱点を突くと大ダメージ！"
             );
         });
 
@@ -1433,6 +1695,7 @@
                 if (confirm("裏ステージを最初からやり直しますか？")) {
                     gameData.trueStageProgress = 0;
                     gameData.playerHp = gameData.playerMaxHp;
+                    gameData.playerMp = gameData.playerMaxMp;
                     const firstE = getCurrentEnemyInfo();
                     gameData.enemyMaxHp = firstE.hp;
                     gameData.enemyHp = firstE.hp;
@@ -1441,20 +1704,15 @@
                 }
                 return;
             }
-            if (gameData.defeatCount < gameData.maxDefeatCount) {
-                alert("歴代の最高到達点まで進まないとリスタートできません！");
-                return;
-            }
-            if (Date.now() - gameData.lastRestartTime < COOLDOWN_TIME) {
-                alert("まだクールダウン中です！");
-                return;
-            }
+            if (gameData.defeatCount < gameData.maxDefeatCount) { alert("歴代の最高到達点まで進まないとリスタートできません！"); return; }
+            if (Date.now() - gameData.lastRestartTime < COOLDOWN_TIME) { alert("まだクールダウン中です！"); return; }
             if (confirm("残りの敵を1000体にリセットしますか？\n(※所持しているスキルもリセットされます)")) {
                 gameData.enemiesRemaining = 1000;
                 gameData.defeatCount = 0;
                 gameData.skills = [];
                 gameData.equippedSkills = [null, null, null];
                 gameData.playerHp = gameData.playerMaxHp;
+                gameData.playerMp = gameData.playerMaxMp;
                 const firstEnemy = getCurrentEnemyInfo();
                 gameData.enemyMaxHp = firstEnemy.hp;
                 gameData.enemyHp = firstEnemy.hp;
@@ -1473,9 +1731,7 @@
                     saveGame();
                     updateScreen();
                 }
-            } else {
-                alert("コインが足りません！");
-            }
+            } else { alert("コインが足りません！"); }
         });
 
         gacha1Btn.addEventListener('click', () => rollGacha(1));
@@ -1484,23 +1740,12 @@
         gameStartBtn.addEventListener('click', () => {
             gameStarted = true;
             startScreenEl.style.opacity = '0';
-            setTimeout(() => {
-                startScreenEl.style.display = 'none';
-            }, 500);
+            setTimeout(() => { startScreenEl.style.display = 'none'; }, 500);
 
-            bgmNormal.play().then(() => {
-                bgmNormal.pause();
-                bgmNormal.currentTime = 0;
-            }).catch(e => {});
-            
-            bgmBoss.play().then(() => {
-                bgmBoss.pause();
-                bgmBoss.currentTime = 0;
-            }).catch(e => {});
+            bgmNormal.play().then(() => { bgmNormal.pause(); bgmNormal.currentTime = 0; }).catch(e => {});
+            bgmBoss.play().then(() => { bgmBoss.pause(); bgmBoss.currentTime = 0; }).catch(e => {});
 
-            if (gameData.bgmEnabled) {
-                updateScreen();
-            }
+            if (gameData.bgmEnabled) updateScreen();
         });
 
         loadGame();
