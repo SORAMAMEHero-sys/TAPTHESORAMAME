@@ -409,8 +409,8 @@
     <div class="section-box admin-panel" id="admin-panel">
         <h3>⚙️ 管理者パネル</h3>
         <div class="button-row" style="margin-bottom: 5px;">
-            <button class="admin-btn" onclick="adminAddCoins()">🪙 コイン+1億</button>
-            <button class="admin-btn" onclick="adminAddRubies()">💎 ルビー+100</button>
+            <button class="admin-btn" onclick="adminAddCoins()">🪙 コイン無限(9999兆)</button>
+            <button class="admin-btn" onclick="adminAddRubies()">💎 ルビー無限(9999兆)</button>
             <button class="admin-btn" onclick="adminKillEnemy()">💥 敵を一撃撃破</button>
         </div>
         <div class="button-row">
@@ -422,6 +422,7 @@
     <div class="menu-buttons">
         <div class="button-row">
             <button class="action-btn" id="upgrade-button">攻撃力強化 (🪙<span id="upgrade-cost">3</span>)</button>
+            <button class="action-btn" id="upgrade-10-button" style="background-color: #d63384;">+10連強化 (🪙<span id="upgrade-10-cost">0</span>)</button>
             <button class="action-btn" id="restart-button" style="background-color: #dc3545;">リスタート</button>
         </div>
         <div class="button-row">
@@ -496,7 +497,7 @@
     </div>
 
     <script>
-        const SAVE_KEY = 'soramame_save_v11';
+        const SAVE_KEY = 'soramame_save_v12';
 
         let gameData = {
             enemiesRemaining: 1000,
@@ -522,7 +523,6 @@
             bgmEnabled: true
         };
 
-        const GOAL = 1000;
         const COOLDOWN_TIME = 15 * 60 * 1000;
 
         const normalEnemies = [
@@ -533,7 +533,7 @@
             { name: "ドラゴン", hp: 250, icon: "🐉" }
         ];
 
-        // ★ 真・裏ステージ（全1000体の構成に拡張）
+        // 真・裏ステージ（全1000体の構成）
         const trueStageEnemies = [];
         const baseTrueList = [
             { name: "【裏】スクイーズ", hp: 10000000, icon: "🟢", isBoss: true },
@@ -542,16 +542,14 @@
             { name: "【裏】グリフィン", hp: 30000000, icon: "🦁", isBoss: true },
             { name: "【裏】ヒドラドラゴン", hp: 50000000, icon: "🐉", isBoss: true }
         ];
-        // 1000体になるようにループしてデータを生成（999体分）
         for (let i = 0; i < 199; i++) {
             baseTrueList.forEach(e => {
                 trueStageEnemies.push({ 
                     ...e, 
-                    hp: e.hp + (i * 2000000) // 進行度に応じてHPが少しずつ上昇
+                    hp: e.hp + (i * 2000000)
                 });
             });
         }
-        // 最後の1000体目にラスボスを配置
         trueStageEnemies.push({ name: "👑【真・ラスボス】魔王グランデ", hp: 5000000000, icon: "👑", isBoss: true, isGrandBoss: true });
 
         let gameStarted = false;
@@ -574,9 +572,11 @@
         const rubyCountEl = document.getElementById('ruby-count');
         const totalAttackPowerEl = document.getElementById('total-attack-power');
         const upgradeCostEl = document.getElementById('upgrade-cost');
+        const upgrade10CostEl = document.getElementById('upgrade-10-cost');
         const exchangeCostEl = document.getElementById('exchange-cost');
         const attackButton = document.getElementById('attack-button');
         const upgradeButton = document.getElementById('upgrade-button');
+        const upgrade10Button = document.getElementById('upgrade-10-button');
         const exchangeBtn = document.getElementById('exchange-btn');
         const rateBtn = document.getElementById('rate-btn');
         const bgmToggleBtn = document.getElementById('bgm-toggle-btn');
@@ -707,6 +707,17 @@
             return Math.floor(base * multiplier);
         }
 
+        // 10連強化の合計コストを算出する関数
+        function get10UpgradeCostInfo() {
+            let tempCost = gameData.upgradeCost;
+            let totalCost = 0;
+            for (let i = 0; i < 10; i++) {
+                totalCost += tempCost;
+                tempCost *= 3;
+            }
+            return totalCost;
+        }
+
         function showCritEffect(text) {
             statusBoxEl.classList.remove('screen-shake');
             void statusBoxEl.offsetWidth;
@@ -814,6 +825,7 @@
             rubyCountEl.textContent = gameData.rubies;
             totalAttackPowerEl.textContent = calculateTotalAttack();
             upgradeCostEl.textContent = gameData.upgradeCost;
+            upgrade10CostEl.textContent = get10UpgradeCostInfo();
 
             const exchangeCost = gameData.attackPower * 6;
             exchangeCostEl.textContent = exchangeCost;
@@ -1026,13 +1038,13 @@
         };
 
         window.adminAddCoins = function() {
-            gameData.coins += 100000000;
+            gameData.coins = 9999000000000000; // 9999兆
             saveGame();
             updateScreen();
         };
 
         window.adminAddRubies = function() {
-            gameData.rubies += 100;
+            gameData.rubies = 9999000000000000; // 9999兆
             saveGame();
             updateScreen();
         };
@@ -1124,7 +1136,7 @@
                 return;
             }
 
-            if (!confirm("【強くてニューゲーム】\n現在の攻撃力やアイテム、スキルを保持したまま、敵の数を1000authTokenに戻して最初から始めますか？".replace('authToken', ''))) return;
+            if (!confirm("【強くてニューゲーム】\n現在の攻撃力やアイテム、スキルを保持したまま、敵の数を1000体に戻して最初から始めますか？")) return;
 
             gameData.enemiesRemaining = 1000;
             gameData.defeatCount = 0;
@@ -1222,6 +1234,22 @@
                 gameData.coins -= gameData.upgradeCost;
                 gameData.attackPower *= 2;
                 gameData.upgradeCost *= 3;
+                saveGame();
+                updateScreen();
+            } else {
+                alert("コインが足りません！");
+            }
+        });
+
+        // +10連強化ボタンの処理
+        upgrade10Button.addEventListener('click', () => {
+            const totalCost = get10UpgradeCostInfo();
+            if (gameData.coins >= totalCost) {
+                gameData.coins -= totalCost;
+                for (let i = 0; i < 10; i++) {
+                    gameData.attackPower *= 2;
+                    gameData.upgradeCost *= 3;
+                }
                 saveGame();
                 updateScreen();
             } else {
