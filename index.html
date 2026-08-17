@@ -81,28 +81,6 @@
             background-color: #e64a19;
         }
 
-        /* 画像ボス用スタイル共通 */
-        .boss-img-container {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 6px auto;
-            border: 3px solid #e74c3c;
-            border-radius: 12px;
-            overflow: hidden;
-            display: none;
-            box-shadow: 0 0 12px rgba(231, 76, 60, 0.6);
-            background: #000;
-            animation: bossFloat 2s ease-in-out infinite;
-        }
-        .boss-img-container.show {
-            display: block;
-        }
-        .boss-img-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
         /* 通常ボスグラフィック用のコンテナ */
         .boss-avatar {
             width: 70px;
@@ -392,7 +370,7 @@
         <button id="game-start-btn">ゲームを開始</button>
     </div>
 
-    <!-- オーディオ要素 (通常時BGM & ボス戦BGM) -->
+    <!-- オーディオ要素 -->
     <audio id="bgm-normal" src="BonDance.mp3" loop preload="auto"></audio>
     <audio id="bgm-boss" src="Brandishing_Evil.mp3" loop preload="auto"></audio>
 
@@ -403,22 +381,12 @@
     </div>
     
     <div class="status-box" id="status-box">
-        <!-- ダウナー専用画像表示エリア -->
-        <div class="boss-img-container" id="downer-img-container">
-            <img src="IMG_2287.png" alt="ダウナー">
-        </div>
-        <!-- ダンビル専用画像表示エリア -->
-        <div class="boss-img-container" id="danville-img-container">
-            <img src="IMG_2288.png" alt="ダンビル">
-        </div>
-        <!-- その他のボス用アバター -->
         <div class="boss-avatar" id="boss-avatar">
             <div class="boss-horn left"></div>
             <div class="boss-horn right"></div>
             <div class="boss-eye left"></div>
             <div class="boss-eye right"></div>
         </div>
-        <!-- 通常敵用アイコン -->
         <div class="normal-icon" id="normal-icon">🟢</div>
 
         <div id="enemy-name" class="enemy-name">スライムが現れた！</div>
@@ -429,8 +397,8 @@
     </div>
 
     <div class="info-panel">
-        残り敵数: <span id="remaining-count">1000</span>体<br>
-        <span class="max-record">(歴代最高到達数: <span id="max-defeat-count">0</span>体)</span><br>
+        <span id="mode-title-label">残り敵数:</span> <span id="remaining-count">1000</span>体<br>
+        <span class="max-record">(歴代最高到達数: <span id="max-defeat-count">0</span>体) | 周回数: <span id="clear-round-count">0</span>周クリア</span><br>
         🪙 コイン: <span id="coin-count">0</span>枚 | 💎 ルビー: <span id="ruby-count">0</span>個<br>
         総攻撃力: <span id="total-attack-power">1</span>
     </div>
@@ -528,7 +496,7 @@
     </div>
 
     <script>
-        const SAVE_KEY = 'soramame_save_v10';
+        const SAVE_KEY = 'soramame_save_v11';
 
         let gameData = {
             enemiesRemaining: 1000,
@@ -540,6 +508,10 @@
             enemyHp: 10,
             defeatCount: 0,
             maxDefeatCount: 0,
+            clearRounds: 0,
+            isTrueStageUnlocked: false,
+            isTrueStageActive: false,
+            trueStageProgress: 0,
             lastRestartTime: 0,
             inventory: [],
             equipped: [null, null, null],
@@ -561,6 +533,19 @@
             { name: "ドラゴン", hp: 250, icon: "🐉" }
         ];
 
+        const trueStageEnemies = [];
+        const baseTrueList = [
+            { name: "スクイーズ", hp: 10000, icon: "🟢", isBoss: true },
+            { name: "ハイオーク", hp: 15000, icon: "🐗", isBoss: true },
+            { name: "ペガサス", hp: 30000, icon: "🦄", isBoss: true },
+            { name: "グリフィン", hp: 45000, icon: "🦁", isBoss: true },
+            { name: "ヒドラドラゴン", hp: 100000, icon: "🐉", isBoss: true }
+        ];
+        for (let i = 0; i < 5; i++) {
+            baseTrueList.forEach(e => trueStageEnemies.push({ ...e }));
+        }
+        trueStageEnemies.push({ name: "ラ・グランデボスズ", hp: 1200000, icon: "👑", isBoss: true, isGrandBoss: true });
+
         let gameStarted = false;
         const bgmNormal = document.getElementById('bgm-normal');
         const bgmBoss = document.getElementById('bgm-boss');
@@ -575,6 +560,8 @@
         const hpTextEl = document.getElementById('hp-text');
         const remainingCountEl = document.getElementById('remaining-count');
         const maxDefeatCountEl = document.getElementById('max-defeat-count');
+        const clearRoundCountEl = document.getElementById('clear-round-count');
+        const modeTitleLabelEl = document.getElementById('mode-title-label');
         const coinCountEl = document.getElementById('coin-count');
         const rubyCountEl = document.getElementById('ruby-count');
         const totalAttackPowerEl = document.getElementById('total-attack-power');
@@ -595,8 +582,6 @@
         const activeBuffTextEl = document.getElementById('active-buff-text');
         const adminPanelEl = document.getElementById('admin-panel');
         const statusBoxEl = document.getElementById('status-box');
-        const downerImgContainer = document.getElementById('downer-img-container');
-        const danvilleImgContainer = document.getElementById('danville-img-container');
         const bossAvatarEl = document.getElementById('boss-avatar');
         const normalIconEl = document.getElementById('normal-icon');
         const startScreenEl = document.getElementById('start-screen');
@@ -636,6 +621,7 @@
         };
 
         function getCoinReward(remaining) {
+            if (gameData.isTrueStageActive) return 50;
             if (remaining > 950) return 1;
             if (remaining > 800) return 2;
             if (remaining > 700) return 3;
@@ -646,9 +632,17 @@
             return 15;
         }
 
-        function getCurrentEnemyInfo(remaining) {
-            if (remaining === 950) return { name: "【ボス】ダウナー", hp: 18000, isBoss: true, isDowner: true };
-            if (remaining === 900) return { name: "【ボス】ダンビル", hp: 32000, isBoss: true, isDanville: true };
+        function getCurrentEnemyInfo() {
+            if (gameData.isTrueStageActive) {
+                const index = gameData.trueStageProgress;
+                if (index < trueStageEnemies.length) {
+                    return trueStageEnemies[index];
+                }
+            }
+
+            const remaining = gameData.enemiesRemaining;
+            if (remaining === 950) return { name: "【ボス】ダウナー", hp: 18000, isBoss: true };
+            if (remaining === 900) return { name: "【ボス】ダンビル", hp: 32000, isBoss: true };
             if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: 50000, isBoss: true };
             if (remaining === 600) return { name: "【ボス】ロメンテヤシ", hp: 120000, isBoss: true };
             if (remaining === 500) return { name: "【ボス】ソクラゼウス", hp: 150000, isBoss: true };
@@ -659,8 +653,9 @@
 
             const index = gameData.defeatCount % normalEnemies.length;
             const baseEnemy = normalEnemies[index];
+            const multiplier = 1 + (gameData.clearRounds * 0.5);
             const groupLevel = Math.floor(gameData.defeatCount / 5);
-            const scaledHp = baseEnemy.hp + (groupLevel * 250);
+            const scaledHp = Math.floor((baseEnemy.hp + (groupLevel * 250)) * multiplier);
 
             return { name: baseEnemy.name, hp: scaledHp, icon: baseEnemy.icon, isBoss: false };
         }
@@ -670,8 +665,8 @@
             let multiplier = 1;
             let isDragonTarget = false;
 
-            const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
-            if (currentEnemy.name.includes("ドラゴン")) {
+            const currentEnemy = getCurrentEnemyInfo();
+            if (currentEnemy.name.includes("ドラゴン") || currentEnemy.name.includes("ヒドラドラゴン")) {
                 isDragonTarget = true;
             }
 
@@ -745,39 +740,52 @@
         }
 
         function updateScreen() {
-            if (gameData.enemiesRemaining <= 0) {
+            clearRoundCountEl.textContent = gameData.clearRounds;
+
+            if (gameData.isTrueStageActive && gameData.trueStageProgress >= trueStageEnemies.length) {
                 stopAllBgm();
                 body.innerHTML = `
                     <div class="clear-container">
-                        <h1>🎉 クリア！ 🎉</h1>
-                        <p>おめでとう！<br>そらまめ軍団はすべての魔物を討伐し、平和を取り戻しました！</p>
+                        <h1>🌌 真・裏ステージ完全制覇！ 🌌</h1>
+                        <p>おめでとう！すべての裏試練（全30体）を突破し、真の平和が訪れました！</p>
                         <button onclick="localStorage.clear(); location.reload();">最初から遊ぶ</button>
                     </div>
                 `;
                 return;
             }
 
-            const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
+            if (!gameData.isTrueStageActive && gameData.enemiesRemaining <= 0) {
+                stopAllBgm();
+                let nextActionText = "強くてニューゲーム！";
+                if (gameData.clearRounds >= 2 && gameData.isTrueStageUnlocked) {
+                    nextActionText = "🌌 裏ステージ（全30体）へ挑む！";
+                }
+
+                body.innerHTML = `
+                    <div class="clear-container">
+                        <h1>🎉 クリアおめでとう！ 🎉</h1>
+                        <p>すべての魔物を討伐しました！<br>強さを引き継いで、さらなる高みへ！</p>
+                        <button onclick="resetForNewGame()" style="background-color: #007bff;">${nextActionText}</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const currentEnemy = getCurrentEnemyInfo();
             enemyNameEl.textContent = `${currentEnemy.name} を攻撃！`;
 
-            if (currentEnemy.isDowner) {
-                downerImgContainer.classList.add('show');
-                danvilleImgContainer.classList.remove('show');
-                bossAvatarEl.classList.remove('show');
-                normalIconEl.style.display = 'none';
-            } else if (currentEnemy.isDanville) {
-                downerImgContainer.classList.remove('show');
-                danvilleImgContainer.classList.add('show');
-                bossAvatarEl.classList.remove('show');
-                normalIconEl.style.display = 'none';
-            } else if (currentEnemy.isBoss) {
-                downerImgContainer.classList.remove('show');
-                danvilleImgContainer.classList.remove('show');
+            if (gameData.isTrueStageActive) {
+                modeTitleLabelEl.textContent = "裏ステージ残り:";
+                remainingCountEl.textContent = (trueStageEnemies.length - gameData.trueStageProgress);
+            } else {
+                modeTitleLabelEl.textContent = "残り敵数:";
+                remainingCountEl.textContent = gameData.enemiesRemaining;
+            }
+
+            if (currentEnemy.isBoss) {
                 bossAvatarEl.classList.add('show');
                 normalIconEl.style.display = 'none';
             } else {
-                downerImgContainer.classList.remove('show');
-                danvilleImgContainer.classList.remove('show');
                 bossAvatarEl.classList.remove('show');
                 normalIconEl.style.display = 'block';
                 normalIconEl.textContent = currentEnemy.icon;
@@ -793,7 +801,6 @@
             hpBarEl.style.width = percentage + "%";
             hpTextEl.textContent = `HP: ${gameData.enemyHp} / ${gameData.enemyMaxHp}`;
             
-            remainingCountEl.textContent = gameData.enemiesRemaining;
             maxDefeatCountEl.textContent = gameData.maxDefeatCount;
             coinCountEl.textContent = gameData.coins;
             rubyCountEl.textContent = gameData.rubies;
@@ -844,7 +851,10 @@
             let restartMessage = "リスタート";
             let showSkipButton = false;
 
-            if (gameData.defeatCount < gameData.maxDefeatCount) {
+            if (gameData.isTrueStageActive) {
+                canRestart = false;
+                restartMessage = "裏ステージ中 (リスタート不可)";
+            } else if (gameData.defeatCount < gameData.maxDefeatCount) {
                 canRestart = false;
                 const needMore = gameData.maxDefeatCount - gameData.defeatCount;
                 restartMessage = `リスタート (あと${needMore}体)`;
@@ -1025,14 +1035,23 @@
         };
 
         window.adminSkip100 = function() {
-            gameData.enemiesRemaining = Math.max(0, gameData.enemiesRemaining - 100);
-            gameData.defeatCount += 100;
-            if (gameData.defeatCount > gameData.maxDefeatCount) {
-                gameData.maxDefeatCount = gameData.defeatCount;
+            if (gameData.isTrueStageActive) {
+                gameData.trueStageProgress += 5;
+                if (gameData.trueStageProgress < trueStageEnemies.length) {
+                    const nextE = getCurrentEnemyInfo();
+                    gameData.enemyMaxHp = nextE.hp;
+                    gameData.enemyHp = nextE.hp;
+                }
+            } else {
+                gameData.enemiesRemaining = Math.max(0, gameData.enemiesRemaining - 100);
+                gameData.defeatCount += 100;
+                if (gameData.defeatCount > gameData.maxDefeatCount) {
+                    gameData.maxDefeatCount = gameData.defeatCount;
+                }
+                const currentEnemy = getCurrentEnemyInfo();
+                gameData.enemyMaxHp = currentEnemy.hp;
+                gameData.enemyHp = currentEnemy.hp;
             }
-            const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
-            gameData.enemyMaxHp = currentEnemy.hp;
-            gameData.enemyHp = currentEnemy.hp;
             saveGame();
             updateScreen();
         };
@@ -1084,11 +1103,43 @@
             alert("ガチャ結果:\n" + results.join("\n"));
         }
 
+        window.resetForNewGame = function() {
+            if (gameData.clearRounds >= 2 && gameData.isTrueStageUnlocked && !gameData.isTrueStageActive) {
+                if (!confirm("【裏ステージ突入】\nこれより強さを引き継いだまま、全30体の真の裏ステージへ挑戦しますか？")) return;
+                gameData.isTrueStageActive = true;
+                gameData.trueStageProgress = 0;
+                const firstE = getCurrentEnemyInfo();
+                gameData.enemyMaxHp = firstE.hp;
+                gameData.enemyHp = firstE.hp;
+                saveGame();
+                location.reload();
+                return;
+            }
+
+            if (!confirm("【強くてニューゲーム】\n現在の攻撃力やアイテム、スキルを保持したまま、敵の数を1000体に戻して最初から始めますか？")) return;
+
+            gameData.enemiesRemaining = 1000;
+            gameData.defeatCount = 0;
+            gameData.coins = 0;
+            gameData.clearRounds += 1;
+
+            if (gameData.clearRounds >= 2) {
+                gameData.isTrueStageUnlocked = true;
+            }
+            
+            const firstEnemy = getCurrentEnemyInfo();
+            gameData.enemyMaxHp = firstEnemy.hp;
+            gameData.enemyHp = firstEnemy.hp;
+            
+            saveGame();
+            location.reload();
+        };
+
         function performAttack() {
             if (!gameStarted) return;
 
             if (!gameData.enemyHp) {
-                const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
+                const currentEnemy = getCurrentEnemyInfo();
                 gameData.enemyMaxHp = currentEnemy.hp;
                 gameData.enemyHp = currentEnemy.hp;
             }
@@ -1109,7 +1160,7 @@
             gameData.enemyHp -= currentAttack;
 
             if (gameData.enemyHp <= 0) {
-                let coinGain = getCoinReward(gameData.enemiesRemaining);
+                let coinGain = getCoinReward(gameData.isTrueStageActive ? 0 : gameData.enemiesRemaining);
                 gameData.equippedSkills.forEach((skill) => {
                     if (!skill) return;
                     if (skill.name === "コインフィーバー" && Math.random() < 0.40) coinGain *= 2;
@@ -1117,13 +1168,17 @@
 
                 gameData.coins += coinGain;
                 
-                const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
+                const currentEnemy = getCurrentEnemyInfo();
                 const wasBoss = currentEnemy.isBoss;
 
-                gameData.enemiesRemaining -= 1;
-                gameData.defeatCount += 1;
+                if (gameData.isTrueStageActive) {
+                    gameData.trueStageProgress += 1;
+                } else {
+                    gameData.enemiesRemaining -= 1;
+                    gameData.defeatCount += 1;
+                }
 
-                if (currentEnemy.name.includes("ドラゴン") || Math.random() < 0.09) {
+                if (currentEnemy.name.includes("ドラゴン") || currentEnemy.name.includes("ヒドラドラゴン") || Math.random() < 0.09) {
                     gameData.rubies += 1;
                 }
 
@@ -1131,15 +1186,13 @@
                     rollSkillDrop();
                 }
 
-                if (gameData.defeatCount > gameData.maxDefeatCount) {
+                if (!gameData.isTrueStageActive && gameData.defeatCount > gameData.maxDefeatCount) {
                     gameData.maxDefeatCount = gameData.defeatCount;
                 }
 
-                if (gameData.enemiesRemaining > 0) {
-                    const nextEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
-                    gameData.enemyMaxHp = nextEnemy.hp;
-                    gameData.enemyHp = nextEnemy.hp;
-                }
+                const nextEnemy = getCurrentEnemyInfo();
+                gameData.enemyMaxHp = nextEnemy.hp;
+                gameData.enemyHp = nextEnemy.hp;
             }
 
             saveGame();
@@ -1203,6 +1256,10 @@
         });
 
         restartButton.addEventListener('click', () => {
+            if (gameData.isTrueStageActive) {
+                alert("裏ステージ中はリスタートできません！");
+                return;
+            }
             if (gameData.defeatCount < gameData.maxDefeatCount) {
                 alert("歴代の最高到達点まで進まないとリスタートできません！");
                 return;
@@ -1216,7 +1273,7 @@
                 gameData.defeatCount = 0;
                 gameData.skills = [];
                 gameData.equippedSkills = [null, null, null];
-                const firstEnemy = getCurrentEnemyInfo(1000);
+                const firstEnemy = getCurrentEnemyInfo();
                 gameData.enemyMaxHp = firstEnemy.hp;
                 gameData.enemyHp = firstEnemy.hp;
                 gameData.lastRestartTime = Date.now();
@@ -1249,7 +1306,6 @@
                 startScreenEl.style.display = 'none';
             }, 500);
 
-            // スタート時の音声再生制限解除（通常・ボス両方のオーディオを事前準備）
             bgmNormal.play().then(() => {
                 bgmNormal.pause();
                 bgmNormal.currentTime = 0;
@@ -1266,7 +1322,7 @@
         });
 
         loadGame();
-        const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
+        const currentEnemy = getCurrentEnemyInfo();
         if (!gameData.enemyHp || gameData.enemyHp > currentEnemy.hp) {
             gameData.enemyMaxHp = currentEnemy.hp;
             gameData.enemyHp = currentEnemy.hp;
