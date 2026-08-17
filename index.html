@@ -423,7 +423,7 @@
     <!-- SHOPモーダル -->
     <div id="shop-modal" class="modal">
         <div class="modal-content">
-            <h3>🛒 ショップ</h3>
+            <h3>🛒 ショップ (ルビー決済)</h3>
             <div id="shop-items-list"></div>
             <div style="text-align:center; margin-top:15px;">
                 <button class="action-btn" onclick="closeShopModal()">閉じる</button>
@@ -602,7 +602,7 @@
     </div>
 
     <script>
-        const SAVE_KEY = 'soramame_save_v15';
+        const SAVE_KEY = 'soramame_save_v17';
 
         let gameData = {
             enemiesRemaining: 1000,
@@ -610,7 +610,6 @@
             rubies: 0,
             magicStones: 0,
             
-            // プレイヤー基本ステータス
             level: 1,
             playerHp: 30,
             playerMaxHp: 30,
@@ -667,15 +666,53 @@
             { name: "【裏】グリフィン", hp: 30000000, icon: "🦁", isBoss: true, atk: 15, eva: 15, element: "fire" },
             { name: "【裏】ヒドラドラゴン", hp: 50000000, icon: "🐉", isBoss: true, atk: 20, eva: 20, element: "ice" }
         ];
-        for (let i = 0; i < 199; i++) {
-            baseTrueList.forEach(e => {
+
+        const secretBossData = {
+            100: { name: "ベヒモス", hp: 68000000 },
+            200: { name: "ニーズヘッグ", hp: 88000000 },
+            300: { name: "ガルーダ", hp: 128000000 },
+            400: { name: "エアラヴァータ", hp: 168000000 },
+            500: { name: "ゲンブ", hp: 208000000 },
+            600: { name: "リヴァイアサン", hp: 248000000 },
+            700: { name: "セイリュウ", hp: 288000000 },
+            800: { name: "スザク", hp: 328000000 },
+            900: { name: "ビャッコ", hp: 368000000 }
+        };
+
+        for (let i = 0; i < 200; i++) {
+            let currentPos = i + 1;
+            
+            if (secretBossData[currentPos]) {
+                const sb = secretBossData[currentPos];
+                trueStageEnemies.push({
+                    name: `👑【シークレットボス】${sb.name}`,
+                    hp: sb.hp,
+                    icon: "👑",
+                    isBoss: true,
+                    atk: 40,
+                    eva: 25,
+                    element: "none"
+                });
+            } else {
+                let templateIndex = i % 5;
+                let e = baseTrueList[templateIndex];
+                let groupIndex = Math.floor(i / 5);
                 trueStageEnemies.push({ 
                     ...e, 
-                    hp: e.hp + (i * 2000000)
+                    hp: e.hp + (groupIndex * 2000000)
                 });
-            });
+            }
         }
-        trueStageEnemies.push({ name: "👑【真・ラスボス】魔王グランデ", hp: 5000000000, icon: "👑", isBoss: true, isGrandBoss: true, atk: 50, eva: 30, element: "none" });
+        trueStageEnemies.push({ 
+            name: "👑【真・ラスボス】魔王グランデ", 
+            hp: 500000000, 
+            icon: "👑", 
+            isBoss: true, 
+            isGrandBoss: true, 
+            atk: 60, 
+            eva: 35, 
+            element: "dark" 
+        });
 
         let gameStarted = false;
         const bgmNormal = document.getElementById('bgm-normal');
@@ -768,7 +805,7 @@
         };
 
         function getCoinReward(remaining) {
-            if (gameData.isTrueStageActive) return 500;
+            if (gameData.isTrueStageActive) return 1500000000; // 裏ステージは15億コイン
             if (remaining > 950) return 1;
             if (remaining > 800) return 2;
             if (remaining > 700) return 3;
@@ -1583,19 +1620,19 @@
             listEl.innerHTML = `
                 <div class="inventory-list" style="max-height:250px;">
                     <div class="inv-item">
-                        <span>🌿 薬草 (HP+15)<br><small>価格: 🪙${costHerb}コイン</small></span>
+                        <span>🌿 薬草 (HP+15)<br><small>価格: 💎${costHerb}ルビー</small></span>
                         <button onclick="buyShopItem('薬草', ${costHerb})">買う</button>
                     </div>
                     <div class="inv-item">
-                        <span>💊 一般的な薬 (HP+50)<br><small>価格: 🪙${costGen}コイン</small></span>
+                        <span>💊 一般的な薬 (HP+50)<br><small>価格: 💎${costGen}ルビー</small></span>
                         <button onclick="buyShopItem('一般的な薬', ${costGen})">買う</button>
                     </div>
                     <div class="inv-item">
-                        <span>🥤 キャンディソーダ (MP+10)<br><small>価格: 🪙${costSoda}コイン</small></span>
+                        <span>🥤 キャンディソーダ (MP+10)<br><small>価格: 💎${costSoda}ルビー</small></span>
                         <button onclick="buyShopItem('キャンディソーダ', ${costSoda})">買う</button>
                     </div>
                     <div class="inv-item">
-                        <span>🧪 凝縮砂糖水 (MP+30)<br><small>価格: 🪙${costSugar}コイン</small></span>
+                        <span>🧪 凝縮砂糖水 (MP+30)<br><small>価格: 💎${costSugar}ルビー</small></span>
                         <button onclick="buyShopItem('凝縮砂糖水', ${costSugar})">買う</button>
                     </div>
                 </div>
@@ -1606,8 +1643,8 @@
         window.closeShopModal = function() { shopModal.style.display = 'none'; };
 
         window.buyShopItem = function(itemName, cost) {
-            if (gameData.coins < cost) { alert("コインが足りません！"); return; }
-            gameData.coins -= cost;
+            if (gameData.rubies < cost) { alert("ルビーが足りません！"); return; }
+            gameData.rubies -= cost;
             gameData.consumables[itemName] = (gameData.consumables[itemName] || 0) + 1;
             saveGame();
             updateScreen();
@@ -1686,6 +1723,7 @@
                 "・ボス撃破時: 確定ドロップ\n\n" +
                 "【 ✨ 魔法・ショップについて 】\n" +
                 "・レベル3でSHOPが解放されます。\n" +
+                "・ショップのアイテムはルビーで購入できます。\n" +
                 "・魔法は相性があり、弱点を突くと大ダメージ！"
             );
         });
