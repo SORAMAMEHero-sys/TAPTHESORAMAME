@@ -75,6 +75,12 @@
             font-size: 0.95rem;
             margin-bottom: 25px;
         }
+        .start-btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
         #game-start-btn {
             background-color: #ff5722;
             color: white;
@@ -90,6 +96,46 @@
         #game-start-btn:active {
             transform: scale(0.95);
             background-color: #e64a19;
+        }
+        #how-to-btn {
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(23, 162, 184, 0.5);
+            transition: transform 0.1s, background-color 0.1s;
+        }
+        #how-to-btn:active {
+            transform: scale(0.95);
+            background-color: #117a8b;
+        }
+
+        /* 遊び方モーダルのスタイル */
+        .howto-content {
+            line-height: 1.6;
+            color: #333;
+        }
+        .howto-section {
+            background: #f8f9fa;
+            border-left: 4px solid #ff5722;
+            padding: 8px 12px;
+            margin-bottom: 12px;
+            border-radius: 0 6px 6px 0;
+        }
+        .howto-section h4 {
+            margin: 0 0 4px 0;
+            color: #ff5722;
+            font-size: 1rem;
+        }
+        .howto-section p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #555;
+            white-space: pre-wrap;
         }
 
         /* モーダルウィンドウ共通 */
@@ -438,7 +484,40 @@
     <div id="start-screen">
         <h1>進め！そらまめ軍団</h1>
         <p>魔物を討伐して世界を救おう！</p>
-        <button id="game-start-btn">ゲームを開始</button>
+        <div class="start-btn-group">
+            <button id="game-start-btn">ゲームを開始</button>
+            <button id="how-to-btn" onclick="openHowToModal()">遊び方</button>
+        </div>
+    </div>
+
+    <!-- 📖 遊び方モーダル -->
+    <div id="howto-modal" class="modal">
+        <div class="modal-content">
+            <h3>📖 遊び方</h3>
+            <div class="howto-content">
+                <p style="text-align: center; font-weight: bold; color: #17a2b8; margin-top: 0;">こんにちは！<br>そらまめゲームズです！</p>
+                
+                <div class="howto-section">
+                    <h4>1. 攻撃</h4>
+                    <p>このゲームはクリックゲームです！<br>「攻撃！」ボタンで攻撃できます<br>レベル・装備を強化することで<br>攻撃力を上げれます！</p>
+                </div>
+
+                <div class="howto-section">
+                    <h4>2. レベル</h4>
+                    <p>敵を倒してコインを貯めて<br>力・耐・避の3要素を強化！<br>レベルを上げるなら<br>リスタートでリセットしまくろう</p>
+                </div>
+
+                <div class="howto-section">
+                    <h4>3. リスタート・スキル</h4>
+                    <p>リスタートは<br>ステージの進行具合を<br>リセットしますぅ！<br>これでコインを集めて<br>じっくり進めていきましょー<br>スキルはリスタートで消えます<br>スキルはボスを倒すとランダムに<br>貰うことができます！効果は秘密🤫</p>
+                </div>
+
+                <p style="text-align: center; font-weight: bold; color: #ff5722; margin-bottom: 0;">まあこのゲームを楽しんで！</p>
+            </div>
+            <div style="text-align:center; margin-top:15px;">
+                <button class="action-btn" onclick="closeHowToModal()">閉じる</button>
+            </div>
+        </div>
     </div>
 
     <!-- オーディオ要素 -->
@@ -841,7 +920,16 @@
         const gameStartBtn = document.getElementById('game-start-btn');
         const shopModal = document.getElementById('shop-modal');
         const magicModal = document.getElementById('magic-modal');
+        const howtoModal = document.getElementById('howto-modal');
         const body = document.body;
+
+        // --- 遊び方モーダルの開閉処理 ---
+        window.openHowToModal = function() {
+            howtoModal.style.display = 'flex';
+        };
+        window.closeHowToModal = function() {
+            howtoModal.style.display = 'none';
+        };
 
         // --- URLパラメータ ?soramame_admin=true の判定 ---
         const urlParams = new URLSearchParams(window.location.search);
