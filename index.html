@@ -533,18 +533,26 @@
             { name: "ドラゴン", hp: 250, icon: "🐉" }
         ];
 
+        // ★ 真・裏ステージ（全1000体の構成に拡張）
         const trueStageEnemies = [];
         const baseTrueList = [
-            { name: "スクイーズ", hp: 10000000, icon: "🟢", isBoss: true },
-            { name: "ハイオーク", hp: 15000000, icon: "🐗", isBoss: true },
-            { name: "ペガサス", hp: 20000000, icon: "🦄", isBoss: true },
-            { name: "グリフィン", hp: 30000000, icon: "🦁", isBoss: true },
-            { name: "ヒドラドラゴン", hp: 50000000, icon: "🐉", isBoss: true }
+            { name: "【裏】スクイーズ", hp: 10000000, icon: "🟢", isBoss: true },
+            { name: "【裏】ハイオーク", hp: 15000000, icon: "🐗", isBoss: true },
+            { name: "【裏】ペガサス", hp: 20000000, icon: "🦄", isBoss: true },
+            { name: "【裏】グリフィン", hp: 30000000, icon: "🦁", isBoss: true },
+            { name: "【裏】ヒドラドラゴン", hp: 50000000, icon: "🐉", isBoss: true }
         ];
-        for (let i = 0; i < 5; i++) {
-            baseTrueList.forEach(e => trueStageEnemies.push({ ...e }));
+        // 1000体になるようにループしてデータを生成（999体分）
+        for (let i = 0; i < 199; i++) {
+            baseTrueList.forEach(e => {
+                trueStageEnemies.push({ 
+                    ...e, 
+                    hp: e.hp + (i * 2000000) // 進行度に応じてHPが少しずつ上昇
+                });
+            });
         }
-        trueStageEnemies.push({ name: "ラ・グランデボス", hp: 120000000, icon: "👑", isBoss: true, isGrandBoss: true });
+        // 最後の1000体目にラスボスを配置
+        trueStageEnemies.push({ name: "👑【真・ラスボス】魔王グランデ", hp: 5000000000, icon: "👑", isBoss: true, isGrandBoss: true });
 
         let gameStarted = false;
         const bgmNormal = document.getElementById('bgm-normal');
@@ -747,7 +755,7 @@
                 body.innerHTML = `
                     <div class="clear-container">
                         <h1>🌌 真・裏ステージ完全制覇！ 🌌</h1>
-                        <p>おめでとう！すべての裏試練（全30体）を突破し、真の平和が訪れました！</p>
+                        <p>おめでとう！すべての裏試練（全1000体）を突破し、真の平和が訪れました！</p>
                         <button onclick="localStorage.clear(); location.reload();">最初から遊ぶ</button>
                     </div>
                 `;
@@ -758,7 +766,7 @@
                 stopAllBgm();
                 let nextActionText = "強くてニューゲーム！";
                 if (gameData.clearRounds >= 2 && gameData.isTrueStageUnlocked) {
-                    nextActionText = "🌌 裏ステージ（全30体）へ挑む！";
+                    nextActionText = "🌌 裏ステージ（全1000体）へ挑む！";
                 }
 
                 body.innerHTML = `
@@ -1036,7 +1044,7 @@
 
         window.adminSkip100 = function() {
             if (gameData.isTrueStageActive) {
-                gameData.trueStageProgress += 5;
+                gameData.trueStageProgress += 100;
                 if (gameData.trueStageProgress < trueStageEnemies.length) {
                     const nextE = getCurrentEnemyInfo();
                     gameData.enemyMaxHp = nextE.hp;
@@ -1105,7 +1113,7 @@
 
         window.resetForNewGame = function() {
             if (gameData.clearRounds >= 2 && gameData.isTrueStageUnlocked && !gameData.isTrueStageActive) {
-                if (!confirm("【裏ステージ突入】\nこれより強さを引き継いだまま、全30体の真の裏ステージへ挑戦しますか？")) return;
+                if (!confirm("【裏ステージ突入】\nこれより強さを引き継いだまま、全1000体の真の裏ステージへ挑戦しますか？")) return;
                 gameData.isTrueStageActive = true;
                 gameData.trueStageProgress = 0;
                 const firstE = getCurrentEnemyInfo();
@@ -1116,7 +1124,7 @@
                 return;
             }
 
-            if (!confirm("【強くてニューゲーム】\n現在の攻撃力やアイテム、スキルを保持したまま、敵の数を1000体に戻して最初から始めますか？")) return;
+            if (!confirm("【強くてニューゲーム】\n現在の攻撃力やアイテム、スキルを保持したまま、敵の数を1000authTokenに戻して最初から始めますか？".replace('authToken', ''))) return;
 
             gameData.enemiesRemaining = 1000;
             gameData.defeatCount = 0;
