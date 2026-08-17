@@ -521,6 +521,30 @@
         </div>
     </div>
 
+    <!-- ✨ オリジナルスキル作成モーダル -->
+    <div id="skill-custom-modal" class="modal">
+        <div class="modal-content">
+            <h3>✨ オリジナルスキル作成</h3>
+            <div style="margin-bottom:8px;">スキル名: <input type="text" id="custom-skill-name" placeholder="例: スーパータレット" style="width:100%; padding:4px; box-sizing:border-box;"></div>
+            <div style="margin-bottom:8px;">
+                スキルタイプ:
+                <select id="custom-skill-type" style="width:100%; padding:4px; box-sizing:border-box;">
+                    <option value="turret">タレット (自動攻撃)</option>
+                    <option value="crit">クリティカル (確率倍率ダメージ)</option>
+                    <option value="killer">〇〇キラー (特効ダメージ)</option>
+                    <option value="fever">〇〇フィーバー (報酬アップなど)</option>
+                </select>
+            </div>
+            <div style="margin-bottom:8px;">パラメータ1（発動間隔秒 or 確率%など）: <input type="number" id="custom-skill-param1" value="2" style="width:100%; padding:4px; box-sizing:border-box;"></div>
+            <div style="margin-bottom:8px;">パラメータ2（倍率や対象キーワードなど）: <input type="text" id="custom-skill-param2" value="2" placeholder="倍率やターゲット名" style="width:100%; padding:4px; box-sizing:border-box;"></div>
+            <div style="margin-bottom:12px;">説明文: <input type="text" id="custom-skill-desc" placeholder="例: 2秒に1回自動攻撃" style="width:100%; padding:4px; box-sizing:border-box;"></div>
+            <div style="text-align:center;">
+                <button class="action-btn" onclick="applyCustomSkill()">スキルを作成して追加</button>
+                <button class="action-btn" style="background-color: #6c757d;" onclick="closeSkillCustomModal()">閉じる</button>
+            </div>
+        </div>
+    </div>
+
     <h1>進め！そらまめ軍団</h1>
     <div class="header-area">
         <div class="author">作者: そらまめゲームズ & Gemini</div>
@@ -563,10 +587,13 @@
             <button class="admin-btn" onclick="adminSkip100()">⏩ 残り-100体</button>
             <button class="admin-btn" onclick="adminUnlockAllSkills()">✨ 全スキル獲得</button>
         </div>
-        <div class="button-row">
+        <div class="button-row" style="margin-bottom: 5px;">
             <button class="admin-btn" onclick="openEnemyCustomModal()">👹 敵の改造</button>
             <button class="admin-btn" onclick="adminFreeLevelUp()">⚡ レベル無料UP</button>
             <button class="admin-btn" onclick="openGachaCustomModal()">🎯 ガチャ確率改造</button>
+        </div>
+        <div class="button-row">
+            <button class="admin-btn" style="background-color: #20c997; color:#fff;" onclick="openSkillCustomModal()">✨ オリジナルスキル作成</button>
         </div>
     </div>
 
@@ -652,7 +679,7 @@
     </div>
 
     <script>
-        const SAVE_KEY = 'soramame_save_v18';
+        const SAVE_KEY = 'soramame_save_v19';
 
         let gameData = {
             enemiesRemaining: 1000,
@@ -910,12 +937,12 @@
         function calculateTotalAttack() {
             let base = gameData.attackPower;
             let multiplier = 1;
-            let isDragonTarget = false;
+            let isTargetMatched = false;
 
             if (gameData.activeEnemies.length > 0) {
                 let leadEnemy = gameData.activeEnemies[0];
                 if (leadEnemy.name.includes("ドラゴン") || leadEnemy.name.includes("ヒドラドラゴン")) {
-                    isDragonTarget = true;
+                    isTargetMatched = true;
                 }
             }
 
@@ -926,16 +953,20 @@
                 if (item.name === "上質な剣") multiplier *= 3;
                 if (item.name === "伝説の剣") {
                     multiplier *= 7;
-                    if (isDragonTarget) multiplier *= 2;
+                    if (isTargetMatched) multiplier *= 2;
                 }
                 if (item.name === "健康飲料") multiplier *= 1.5;
                 if (item.name === "エナドリ") multiplier *= 3;
             });
 
+            // スキルのキラー判定
             gameData.equippedSkills.forEach((skill) => {
                 if (!skill) return;
-                if (skill.name === "ドラゴンキラー" && isDragonTarget) {
-                    multiplier *= 1.5;
+                if (skill.type === "killer") {
+                    let keyword = skill.param2 || "ドラゴン";
+                    if (gameData.activeEnemies.length > 0 && gameData.activeEnemies[0].name.includes(keyword)) {
+                        multiplier *= parseFloat(skill.param1) || 1.5;
+                    }
                 }
             });
 
@@ -963,28 +994,23 @@
         function rollSkillDrop() {
             const rand = Math.random() * 100;
             let droppedSkillName = "";
+            let sType = "turret";
+            let p1 = 3;
+            let p2 = 1;
+            let desc = "";
 
-            if (rand < 30) droppedSkillName = "タレット";
-            else if (rand < 50) droppedSkillName = "クリティカル";
-            else if (rand < 65) droppedSkillName = "極クリティカル";
-            else if (rand < 80) droppedSkillName = "コインフィーバー";
-            else if (rand < 95) droppedSkillName = "ドラゴンキラー";
-            else droppedSkillName = "新型タレット";
+            if (rand < 30) { droppedSkillName = "タレット"; sType = "turret"; p1 = 3; desc = "3秒に1回自動タップ"; }
+            else if (rand < 50) { droppedSkillName = "クリティカル"; sType = "crit"; p1 = 10; p2 = 2; desc = "10%の確率で2倍ダメージ"; }
+            else if (rand < 65) { droppedSkillName = "極クリティカル"; sType = "crit"; p1 = 1; p2 = 6; desc = "1%の確率で6倍ダメージ"; }
+            else if (rand < 80) { droppedSkillName = "コインフィーバー"; sType = "fever"; p1 = 40; p2 = 2; desc = "40%でコイン2倍獲得"; }
+            else if (rand < 95) { droppedSkillName = "ドラゴンキラー"; sType = "killer"; p1 = 1.5; p2 = "ドラゴン"; desc = "ドラゴンに対して1.5倍"; }
+            else { droppedSkillName = "新型タレット"; sType = "turret"; p1 = 1; desc = "1秒に1回自動タップ"; }
 
             const hasInSkills = gameData.skills.some(s => s.name === droppedSkillName);
             const hasInEquipped = gameData.equippedSkills.some(s => s && s.name === droppedSkillName);
 
             if (!hasInSkills && !hasInEquipped) {
-                let desc = "";
-                let cooldown = "";
-                if (droppedSkillName === "タレット") { desc = "3秒に1回自動タップ"; cooldown = "3秒"; }
-                else if (droppedSkillName === "クリティカル") { desc = "10%の確率で2倍ダメージ"; cooldown = "常時"; }
-                else if (droppedSkillName === "極クリティカル") { desc = "1%の確率で6倍ダメージ"; cooldown = "常時"; }
-                else if (droppedSkillName === "コインフィーバー") { desc = "40%でコイン2倍獲得"; cooldown = "撃破時"; }
-                else if (droppedSkillName === "ドラゴンキラー") { desc = "ドラゴンに対して1.5倍"; cooldown = "常時"; }
-                else if (droppedSkillName === "新型タレット") { desc = "1秒に1回自動タップ"; cooldown = "1秒"; }
-
-                gameData.skills.push({ name: droppedSkillName, desc: desc, cooldown: cooldown });
+                gameData.skills.push({ name: droppedSkillName, type: sType, param1: p1, param2: p2, desc: desc, cooldown: p1 + "秒" });
             }
         }
 
@@ -1267,7 +1293,7 @@
                             <strong>${skill.name}</strong>
                             <button onclick="equipSkill(${index})">装備する</button>
                         </div>
-                        <span style="font-size:0.7rem; color:#666;">性能: ${skill.desc} / クールダウン: ${skill.cooldown}</span>
+                        <span style="font-size:0.7rem; color:#666;">タイプ: ${skill.type} / 性能: ${skill.desc}</span>
                     </div>
                 `;
             });
@@ -1400,12 +1426,12 @@
         };
         window.adminUnlockAllSkills = function() {
             const allSkills = [
-                { name: "タレット", desc: "3秒に1回自動タップ", cooldown: "3秒" },
-                { name: "クリティカル", desc: "10%の確率で2倍ダメージ", cooldown: "常時" },
-                { name: "極クリティカル", desc: "1%の確率で6倍ダメージ", cooldown: "常時" },
-                { name: "コインフィーバー", desc: "40%でコイン2倍獲得", cooldown: "撃破時" },
-                { name: "ドラゴンキラー", desc: "ドラゴンに対して1.5倍", cooldown: "常時" },
-                { name: "新型タレット", desc: "1秒に1回自動タップ", cooldown: "1秒" }
+                { name: "タレット", type: "turret", param1: 3, desc: "3秒に1回自動タップ", cooldown: "3秒" },
+                { name: "クリティカル", type: "crit", param1: 10, param2: 2, desc: "10%の確率で2倍ダメージ", cooldown: "常時" },
+                { name: "極クリティカル", type: "crit", param1: 1, param2: 6, desc: "1%の確率で6倍ダメージ", cooldown: "常時" },
+                { name: "コインフィーバー", type: "fever", param1: 40, param2: 2, desc: "40%でコイン2倍獲得", cooldown: "撃破時" },
+                { name: "ドラゴンキラー", type: "killer", param1: 1.5, param2: "ドラゴン", desc: "ドラゴンに対して1.5倍", cooldown: "常時" },
+                { name: "新型タレット", type: "turret", param1: 1, desc: "1秒に1回自動タップ", cooldown: "1秒" }
             ];
             allSkills.forEach(s => {
                 const exists = gameData.skills.some(item => item.name === s.name) || gameData.equippedSkills.some(item => item && item.name === s.name);
@@ -1504,6 +1530,36 @@
             alert(`🎯 ガチャ高レア（伝説の剣・エナドリ）の排出確率を ${rate}% に変更しました！`);
         };
 
+        // --- オリジナルスキル作成関連 ---
+        window.openSkillCustomModal = function() {
+            document.getElementById('skill-custom-modal').style.display = 'flex';
+        };
+        window.closeSkillCustomModal = function() {
+            document.getElementById('skill-custom-modal').style.display = 'none';
+        };
+        window.applyCustomSkill = function() {
+            const name = document.getElementById('custom-skill-name').value || "オリジナルスキル";
+            const type = document.getElementById('custom-skill-type').value;
+            const param1 = parseFloat(document.getElementById('custom-skill-param1').value) || 2;
+            const param2 = document.getElementById('custom-skill-param2').value || "2";
+            const desc = document.getElementById('custom-skill-desc').value || `${type}スキル`;
+
+            const newSkill = {
+                name: name,
+                type: type,
+                param1: param1,
+                param2: param2,
+                desc: desc,
+                cooldown: type === 'turret' ? param1 + '秒' : '常時'
+            };
+
+            gameData.skills.push(newSkill);
+            closeSkillCustomModal();
+            saveGame();
+            updateScreen();
+            alert(`✨ オリジナルスキル「${name}」を作成して所持スキルに追加しました！`);
+        };
+
         function rollGacha(count) {
             const cost = count * 10;
             if (gameData.rubies < cost) { alert("ルビーが足りません！"); return; }
@@ -1583,14 +1639,16 @@
             let targetEnemy = gameData.activeEnemies[0];
             let currentAttack = calculateTotalAttack();
 
+            // 装備中スキルの効果適用
             gameData.equippedSkills.forEach((skill) => {
                 if (!skill) return;
-                if (skill.name === "極クリティカル" && Math.random() < 0.01) {
-                    currentAttack *= 6;
-                    showCritEffect("⚡ 極大クリティカル！ ⚡");
-                } else if (skill.name === "クリティカル" && Math.random() < 0.10) {
-                    currentAttack *= 2;
-                    showCritEffect("💥 会心の一撃！ 💥");
+                if (skill.type === "crit") {
+                    let rate = parseFloat(skill.param1) || 10;
+                    let mult = parseFloat(skill.param2) || 2;
+                    if (Math.random() * 100 < rate) {
+                        currentAttack *= mult;
+                        showCritEffect(`💥 ${skill.name}発動！ ${mult}倍ダメージ！ 💥`);
+                    }
                 }
             });
 
@@ -1598,9 +1656,17 @@
 
             if (targetEnemy.currentHp <= 0) {
                 let coinGain = getCoinReward(gameData.isTrueStageActive ? 0 : gameData.enemiesRemaining);
+                
+                // フィーバー系スキルの判定
                 gameData.equippedSkills.forEach((skill) => {
                     if (!skill) return;
-                    if (skill.name === "コインフィーバー" && Math.random() < 0.40) coinGain *= 2;
+                    if (skill.type === "fever") {
+                        let rate = parseFloat(skill.param1) || 40;
+                        let mult = parseFloat(skill.param2) || 2;
+                        if (Math.random() * 100 < rate) {
+                            coinGain *= mult;
+                        }
+                    }
                 });
 
                 gameData.coins += coinGain;
@@ -1785,13 +1851,24 @@
 
         attackButton.addEventListener('click', performAttack);
 
+        // 基本の自動攻撃タイマー
         setInterval(() => { if (gameStarted && !gameData.isStopped) performAttack(); }, 2000);
+        
+        // タレット系スキルを動的に管理する自動攻撃ループ
         setInterval(() => {
-            if (gameStarted && !gameData.isStopped && gameData.equippedSkills.some(s => s && s.name === "タレット")) performAttack();
-        }, 3000);
-        setInterval(() => {
-            if (gameStarted && !gameData.isStopped && gameData.equippedSkills.some(s => s && s.name === "新型タレット")) performAttack();
+            if (gameStarted && !gameData.isStopped) {
+                gameData.equippedSkills.forEach(skill => {
+                    if (skill && skill.type === "turret") {
+                        let intervalSec = parseFloat(skill.param1) || 3;
+                        // 1秒ごとにチェックし、各タレットのインターバル秒数に合わせて発動させる簡易処理
+                        if (Math.random() < (1 / intervalSec)) {
+                            performAttack();
+                        }
+                    }
+                });
+            }
         }, 1000);
+
         setInterval(() => {
             if (gameStarted && !gameData.isStopped) enemyAttackAction();
         }, 10000);
