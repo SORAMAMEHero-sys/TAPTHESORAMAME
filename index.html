@@ -321,8 +321,6 @@
             { name: "ドラゴン", hp: 250 }
         ];
 
-        let lastDragonHp = 250;
-
         const enemyNameEl = document.getElementById('enemy-name');
         const hpBarEl = document.getElementById('hp-bar');
         const hpTextEl = document.getElementById('hp-text');
@@ -348,10 +346,10 @@
         const body = document.body;
 
         function loadGame() {
-            const saved = localStorage.getItem('soramame_save_v6');
+            const saved = localStorage.getItem('soramame_save_v7');
             let targetSave = saved;
             if (!targetSave) {
-                targetSave = localStorage.getItem('soramame_save_v5') || localStorage.getItem('soramame_save_v4');
+                targetSave = localStorage.getItem('soramame_save_v6') || localStorage.getItem('soramame_save_v5') || localStorage.getItem('soramame_save_v4');
             }
             if (targetSave) {
                 try {
@@ -364,7 +362,7 @@
         }
 
         function saveGame() {
-            localStorage.setItem('soramame_save_v6', JSON.stringify(gameData));
+            localStorage.setItem('soramame_save_v7', JSON.stringify(gameData));
         }
 
         function getCoinReward(remaining) {
@@ -384,23 +382,19 @@
         }
 
         function getCurrentEnemyInfo(remaining) {
-            if (remaining === 950) return { name: "【ボス】ダウナー", hp: lastDragonHp * 25, isDragon: false, isBoss: true };
-            if (remaining === 900) return { name: "【ボス】ダンビル", hp: lastDragonHp * 25, isDragon: false, isBoss: true };
-            if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: lastDragonHp * 25, isDragon: false, isBoss: true };
-            if (remaining === 600) return { name: "【ボス】ロメンテヤシ", hp: lastDragonHp * 25, isDragon: false, isBoss: true };
-            if (remaining === 500) return { name: "【ボス】ソクラゼウス", hp: lastDragonHp * 75, isDragon: false, isBoss: true };
-            if (remaining === 350) return { name: "【ボス】ダウナー EX", hp: lastDragonHp * 70, isDragon: false, isBoss: true };
-            if (remaining === 100) return { name: "【ボス】終焉の支配者", hp: lastDragonHp * 100, isDragon: false, isBoss: true };
-            if (remaining === 50)  return { name: "【ボス】ラストビュオス", hp: lastDragonHp * 150, isDragon: false, isBoss: true };
-            if (remaining === 1)   return { name: "👑【ラスボス】そらまめ", hp: lastDragonHp * 250, isDragon: false, isBoss: true };
+            // 固定の強力なボスHP設定
+            if (remaining === 950) return { name: "【ボス】ダウナー", hp: 3000, isDragon: false, isBoss: true };
+            if (remaining === 900) return { name: "【ボス】ダンビル", hp: 8000, isDragon: false, isBoss: true };
+            if (remaining === 800) return { name: "【ボス】ダミルマッチャ", hp: 20000, isDragon: false, isBoss: true };
+            if (remaining === 600) return { name: "【ボス】ロメンテヤシ", hp: 60000, isDragon: false, isBoss: true };
+            if (remaining === 500) return { name: "【ボス】ソクラゼウス", hp: 150000, isDragon: false, isBoss: true };
+            if (remaining === 350) return { name: "【ボス】ダウナー EX", hp: 400000, isDragon: false, isBoss: true };
+            if (remaining === 100) return { name: "【ボス】終焉の支配者", hp: 1200000, isDragon: false, isBoss: true };
+            if (remaining === 50)  return { name: "【ボス】ラストビュオス", hp: 3500000, isDragon: false, isBoss: true };
+            if (remaining === 1)   return { name: "👑【ラスボス】そらまめ", hp: 10000000, isDragon: false, isBoss: true };
 
             const index = gameData.defeatCount % normalEnemies.length;
             const baseEnemy = normalEnemies[index];
-            
-            if (index === 4) {
-                lastDragonHp = baseEnemy.hp;
-            }
-
             const groupLevel = Math.floor(gameData.defeatCount / 5);
             const scaledHp = Math.floor(baseEnemy.hp * Math.pow(1.5, groupLevel));
             const isDragon = (baseEnemy.name.includes("ドラゴン"));
@@ -452,8 +446,6 @@
             const rand = Math.random() * 100;
             let droppedSkillName = "";
 
-            // 確率配分 (合計100)
-            // タレット: 30%, クリティカル: 20%, 極クリティカル: 15%, コインフィーバー: 15%, ドラゴンキラー: 15%, 新型タレット: 5%
             if (rand < 30) droppedSkillName = "タレット";
             else if (rand < 50) droppedSkillName = "クリティカル";
             else if (rand < 65) droppedSkillName = "極クリティカル";
@@ -485,7 +477,7 @@
                     <div class="clear-container">
                         <h1>🎉 クリア！ 🎉</h1>
                         <p>おめでとう！<br>そらまめ軍団はすべての魔物を討伐し、平和を取り戻しました！</p>
-                        <button onclick="localStorage.removeItem('soramame_save_v6'); localStorage.removeItem('soramame_save_v5'); localStorage.removeItem('soramame_save_v4'); location.reload();">最初から遊ぶ</button>
+                        <button onclick="localStorage.removeItem('soramame_save_v7'); localStorage.removeItem('soramame_save_v6'); localStorage.removeItem('soramame_save_v5'); location.reload();">最初から遊ぶ</button>
                     </div>
                 `;
                 return;
@@ -688,7 +680,6 @@
             else if (!gameData.equippedSkills[1]) targetSlot = 1;
             else if (!gameData.equippedSkills[2]) targetSlot = 2;
             else {
-                // すべて埋まっている場合は枠0に戻して新しいものを入れる
                 targetSlot = 0;
                 gameData.skills.push(gameData.equippedSkills[0]);
             }
@@ -763,7 +754,6 @@
 
             let currentAttack = calculateTotalAttack();
 
-            // クリティカル判定
             gameData.equippedSkills.forEach((skill) => {
                 if (!skill) return;
                 if (skill.name === "クリティカル") {
@@ -783,7 +773,6 @@
             if (gameData.enemyHp <= 0) {
                 let coinGain = getCoinReward(gameData.enemiesRemaining);
 
-                // コインフィーバー判定
                 gameData.equippedSkills.forEach((skill) => {
                     if (!skill) return;
                     if (skill.name === "コインフィーバー") {
@@ -806,7 +795,6 @@
                     gameData.rubies += 1;
                 }
 
-                // ボス撃破時のスキルランダムドロップ
                 if (wasBoss) {
                     rollSkillDrop();
                 }
@@ -828,12 +816,10 @@
 
         attackButton.addEventListener('click', performAttack);
 
-        // 基本自動オート (2秒ごと)
         setInterval(() => {
             performAttack();
         }, 2000);
 
-        // タレットスキル自動タップ (3秒に1回)
         setInterval(() => {
             const hasTurret = gameData.equippedSkills.some(s => s && s.name === "タレット");
             if (hasTurret) {
@@ -841,7 +827,6 @@
             }
         }, 3000);
 
-        // 新型タレットスキル自動タップ (1秒に1回)
         setInterval(() => {
             const hasNewTurret = gameData.equippedSkills.some(s => s && s.name === "新型タレット");
             if (hasNewTurret) {
