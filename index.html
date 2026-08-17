@@ -497,7 +497,7 @@
     </div>
 
     <script>
-        const SAVE_KEY = 'soramame_save_v12';
+        const SAVE_KEY = 'soramame_save_v13';
 
         let gameData = {
             enemiesRemaining: 1000,
@@ -707,13 +707,13 @@
             return Math.floor(base * multiplier);
         }
 
-        // 10連強化の合計コストを算出する関数
+        // 10連強化の合計コスト（足し算ベース：毎回コストが＋10ずつ増える仕様）
         function get10UpgradeCostInfo() {
             let tempCost = gameData.upgradeCost;
             let totalCost = 0;
             for (let i = 0; i < 10; i++) {
                 totalCost += tempCost;
-                tempCost *= 3;
+                tempCost += 10; // 1回ごとに＋10増える足し算調整
             }
             return totalCost;
         }
@@ -1229,11 +1229,12 @@
             if (gameStarted && gameData.equippedSkills.some(s => s && s.name === "新型タレット")) performAttack();
         }, 1000);
 
+        // 攻撃力強化ボタン（攻撃力は倍増、コストは毎回＋10ずつ増える足し算方式に変更）
         upgradeButton.addEventListener('click', () => {
             if (gameData.coins >= gameData.upgradeCost) {
                 gameData.coins -= gameData.upgradeCost;
                 gameData.attackPower *= 2;
-                gameData.upgradeCost *= 3;
+                gameData.upgradeCost += 10; // コストが＋10ずつ増える
                 saveGame();
                 updateScreen();
             } else {
@@ -1241,14 +1242,14 @@
             }
         });
 
-        // +10連強化ボタンの処理
+        // +10連強化ボタンの処理（コストは足し算で10回分累積）
         upgrade10Button.addEventListener('click', () => {
             const totalCost = get10UpgradeCostInfo();
             if (gameData.coins >= totalCost) {
                 gameData.coins -= totalCost;
                 for (let i = 0; i < 10; i++) {
                     gameData.attackPower *= 2;
-                    gameData.upgradeCost *= 3;
+                    gameData.upgradeCost += 10; // 10回分それぞれ＋10ずつコストを増加
                 }
                 saveGame();
                 updateScreen();
