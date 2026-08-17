@@ -19,10 +19,29 @@
             font-size: 1.4rem;
             margin-bottom: 2px;
         }
+        .header-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
         .author {
             color: #666;
             font-size: 0.8rem;
-            margin-bottom: 10px;
+            margin: 0;
+        }
+        .hard-reset-btn {
+            background-color: #343a40;
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .hard-reset-btn:active {
+            background-color: #1d2124;
         }
         .status-box {
             background: white;
@@ -218,7 +237,10 @@
 <body>
 
     <h1>進め！そらまめ軍団</h1>
-    <div class="author">作者: そらまめゲームズ & Gemini</div>
+    <div class="header-area">
+        <div class="author">作者: そらまめゲームズ & Gemini</div>
+        <button class="hard-reset-btn" onclick="hardReset()">完全初期化</button>
+    </div>
     
     <div class="status-box">
         <div id="enemy-name" class="enemy-name">スライムが現れた！</div>
@@ -382,7 +404,6 @@
         const adminPanelEl = document.getElementById('admin-panel');
         const body = document.body;
 
-        // URLパラメータのチェック（?soramame_admin=true がついている場合のみ管理者パネルを表示）
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('soramame_admin') === 'true') {
             adminPanelEl.style.display = 'block';
@@ -407,6 +428,22 @@
         function saveGame() {
             localStorage.setItem('soramame_save_v8', JSON.stringify(gameData));
         }
+
+        // 完全初期化（確認ダイアログ5回）
+        window.hardReset = function() {
+            if (!confirm("【警告】ゲームデータを完全に初期化しますか？\n（すべての進行度が消去されます）")) return;
+            if (!confirm("本当に本当によろしいですか？")) return;
+            if (!confirm("後悔しませんね？")) return;
+            if (!confirm("最後の確認です。本当に最初からにしますか？")) return;
+            if (!confirm("それではデータを完全削除します。よろしいですね？")) return;
+
+            // 全セーブデータを削除
+            localStorage.removeItem('soramame_save_v8');
+            localStorage.removeItem('soramame_save_v7');
+            localStorage.removeItem('soramame_save_v6');
+            localStorage.removeItem('soramame_save_v5');
+            location.reload();
+        };
 
         function getCoinReward(remaining) {
             if (remaining > 950) return 1;
@@ -433,7 +470,6 @@
             const index = gameData.defeatCount % normalEnemies.length;
             const baseEnemy = normalEnemies[index];
             const groupLevel = Math.floor(gameData.defeatCount / 5);
-            // インフレが激しすぎないよう調整（掛け算ではなく加算、または控えめな増加に抑える例：ベースHP＋グループ毎に250加算）
             const scaledHp = baseEnemy.hp + (groupLevel * 250);
             const isDragon = (baseEnemy.name.includes("ドラゴン"));
 
@@ -728,7 +764,6 @@
             updateScreen();
         };
 
-        // 管理者ボタン用のアクション（コイン+1億に変更）
         window.adminAddCoins = function() {
             gameData.coins += 100000000;
             saveGame();
