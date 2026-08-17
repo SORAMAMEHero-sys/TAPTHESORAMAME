@@ -402,7 +402,7 @@
             background: #343a40;
             color: white;
             border: 2px dashed #ffc107;
-            display: none;
+            display: none; /* デフォルトは非表示 */
         }
         .admin-panel h3 {
             color: #ffc107;
@@ -563,7 +563,6 @@
             <button class="admin-btn" onclick="adminSkip100()">⏩ 残り-100体</button>
             <button class="admin-btn" onclick="adminUnlockAllSkills()">✨ 全スキル獲得</button>
         </div>
-        <!-- 追加したカスタマイズボタン群 -->
         <div class="button-row">
             <button class="admin-btn" onclick="openEnemyCustomModal()">👹 敵の改造</button>
             <button class="admin-btn" onclick="adminFreeLevelUp()">⚡ レベル無料UP</button>
@@ -679,10 +678,7 @@
             lastRestartTime: 0,
             isStopped: false,
 
-            // ガチャ高レア確率のカスタム値（初期は未設定なら通常判定）
             customHighRate: null,
-
-            // 現在出現している敵のリスト（1〜2体、横並び）
             activeEnemies: [],
 
             inventory: [],
@@ -820,9 +816,11 @@
         const magicModal = document.getElementById('magic-modal');
         const body = document.body;
 
+        // --- URLパラメータ ?soramame_admin=true の判定 ---
         const urlParams = new URLSearchParams(window.location.search);
-        // 無条件で常時管理者パネルを表示するように設定（またはパラメータ維持）
-        adminPanelEl.style.display = 'block';
+        if (urlParams.get('soramame_admin') === 'true') {
+            adminPanelEl.style.display = 'block';
+        }
 
         function loadGame() {
             const saved = localStorage.getItem(SAVE_KEY);
@@ -901,7 +899,6 @@
             let primary = generateSingleEnemyData();
             let enemies = [primary];
 
-            // 通常は5%だが、もし管理側で強制的に2体にしたい場合の処理などもここに含む
             if (Math.random() < 0.05) {
                 let companion = generateSingleEnemyData();
                 companion.name = "【仲間】" + companion.name;
@@ -1060,7 +1057,6 @@
             });
             enemiesContainerEl.innerHTML = enemiesHtml;
 
-            let stateSuffix = gameData.isStopped ? " ⏸️【Stop中】" : "";
             if (gameData.isTrueStageActive) {
                 modeTitleLabelEl.textContent = "裏ステージ残り:";
                 remainingCountEl.textContent = Math.max(0, trueStageEnemies.length - gameData.trueStageProgress);
@@ -1381,7 +1377,6 @@
             updateScreen();
         };
 
-        // --- 管理者パネルの既存機能 ---
         window.adminAddCoins = function() { gameData.coins += 999999999; saveGame(); updateScreen(); };
         window.adminAddRubies = function() { gameData.rubies += 999999999; saveGame(); updateScreen(); };
         window.adminAddStones = function() { gameData.magicStones += 10; saveGame(); updateScreen(); };
@@ -1420,13 +1415,12 @@
             updateScreen();
         };
 
-        // --- 新規追加：レベルをタダで上げるボタン ---
         window.adminFreeLevelUp = function() {
             gameData.level += 1;
             gameData.playerMaxHp += 3;
-            gameData.playerHp = gameData.playerMaxHp; // HPも全回復
+            gameData.playerHp = gameData.playerMaxHp;
             gameData.playerMaxMp += 3;
-            gameData.playerMp = gameData.playerMaxMp; // MPも全回復
+            gameData.playerMp = gameData.playerMaxMp;
             gameData.attackPower += 2;
             gameData.evasion = Math.min(90, gameData.evasion + 1);
             saveGame();
@@ -1434,7 +1428,6 @@
             alert("⚡ レベルをタダで1アップしました！");
         };
 
-        // --- 新規追加：敵の改造機能 ---
         window.openEnemyCustomModal = function() {
             if (!gameData.activeEnemies || gameData.activeEnemies.length === 0) {
                 spawnOrRefreshEnemies();
@@ -1495,7 +1488,6 @@
             alert("👹 敵のステータスを改造しました！");
         };
 
-        // --- 新規追加：ガチャ確率改造機能 ---
         window.openGachaCustomModal = function() {
             document.getElementById('edit-gacha-rate').value = gameData.customHighRate !== null ? gameData.customHighRate : 20;
             document.getElementById('gacha-custom-modal').style.display = 'flex';
@@ -1523,13 +1515,10 @@
                 const rand = Math.random() * 100;
                 let obtained = null;
 
-                // ガチャ確率改造が設定されている場合のカスタム判定
                 if (gameData.customHighRate !== null) {
-                    // カスタム確率を「最高レア枠（伝説の剣 or エナドリ）」に割り当て
                     if (rand < gameData.customHighRate) {
                         obtained = Math.random() < 0.5 ? { name: "伝説の剣", type: "sword" } : { name: "エナドリ", type: "item" };
                     } else {
-                        // 残りの確率を通常アイテムに分配
                         const subRand = Math.random() * 100;
                         if (subRand < 50) obtained = { name: "普通の剣", type: "sword" };
                         else if (subRand < 75) obtained = { name: "少しいい剣", type: "sword" };
@@ -1537,7 +1526,6 @@
                         else obtained = { name: "健康飲料", type: "item" };
                     }
                 } else {
-                    // 通常の確率分岐
                     if (rand < 35) obtained = { name: "普通の剣", type: "sword" };
                     else if (rand < 60) obtained = { name: "少しいい剣", type: "sword" };
                     else if (rand < 75) obtained = { name: "上質な剣", type: "sword" };
