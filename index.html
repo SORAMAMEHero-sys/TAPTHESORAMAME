@@ -405,6 +405,46 @@
             cursor: pointer;
             margin-top: 20px;
         }
+        /* 必殺技ゲージスタイル */
+        .special-gauge-container {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            height: 10px;
+            margin-top: 6px;
+            margin-bottom: 4px;
+        }
+        .special-gauge {
+            width: 0%;
+            height: 100%;
+            background-color: #ff9800;
+            transition: width 0.2s;
+        }
+        #special-move-btn {
+            background-color: #e91e63;
+            color: white;
+            font-weight: bold;
+            width: 100%;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 5px;
+            font-size: 0.85rem;
+        }
+        #special-move-btn:active {
+            background-color: #c2185b;
+        }
+        .crafting-btn {
+            background-color: #795548;
+            color: white;
+            border: none;
+            padding: 3px 8px;
+            font-size: 0.7rem;
+            border-radius: 3px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -412,7 +452,7 @@
     <!-- スタート画面オーバーレイ -->
     <div id="start-screen">
         <h1>進め！そらまめ軍団</h1>
-        <p>魔物を討伐して世界を救おう！ (v18 Update)</p>
+        <p>魔物を討伐して世界を救おう！ (v19 Crafting & Special)</p>
         <button id="game-start-btn">ゲームを開始</button>
     </div>
 
@@ -469,7 +509,7 @@
 
     <h1>進め！そらまめ軍団</h1>
     <div class="header-area">
-        <div class="author">作者: そらまめゲームズ & Gemini (v18)</div>
+        <div class="author">作者: そらまめゲームズ & Gemini (v19)</div>
         <button class="hard-reset-btn" onclick="hardReset()">完全初期化</button>
     </div>
     
@@ -493,6 +533,18 @@
             ❤️ HP: <span id="player-hp">30</span>/<span id="player-max-hp">30</span><br>
             💙 MP: <span id="player-mp">10</span>/<span id="player-max-mp">10</span><br>
             ⚔️ 攻撃: <span id="player-atk">1</span> | 💨 回避: <span id="player-eva">5</span>%
+            
+            <!-- 必殺技ゲージセクション -->
+            <div style="margin-top: 6px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+                    <span>✨ 必殺技ゲージ</span>
+                    <span id="special-gauge-text">0%</span>
+                </div>
+                <div class="special-gauge-container">
+                    <div id="special-gauge" class="special-gauge"></div>
+                </div>
+                <button id="special-move-btn" onclick="activateSpecialMove()">⚡ 必殺・そらまめ乱舞！ (MAXで発動)</button>
+            </div>
         </div>
     </div>
 
@@ -500,6 +552,7 @@
         <span id="mode-title-label">残り敵数:</span> <span id="remaining-count">1000</span>体<br>
         <span class="max-record">(歴代最高到達数: <span id="max-defeat-count">0</span>体) | 周回数: <span id="clear-round-count">0</span>周クリア</span><br>
         🪙 コイン: <span id="coin-count">0</span>枚 | 💎 ルビー: <span id="ruby-count">0</span>個 | 🔮 魔法石: <span id="magic-stone-count">0</span>個<br>
+        🧩 欠片: <span id="material-fragment-count">0</span>個 | 🧱 鉄鉱石: <span id="material-ore-count">0</span>個<br>
         総攻撃力: <span id="total-attack-power">1</span>
     </div>
     
@@ -541,6 +594,21 @@
         </div>
         <div class="button-row">
             <button class="action-btn" id="skip-button" style="background-color: #6c757d; display: none;">CDスキップ (🪙<span id="skip-cost">0</span>)</button>
+        </div>
+    </div>
+
+    <!-- クラフト工房セクション -->
+    <div class="section-box">
+        <h3>🔨 クラフト工房</h3>
+        <div class="inventory-list">
+            <div class="inv-item">
+                <span>⚔️ 伝説の剣<br><small style="color:#666;">必要: 欠片x5, 鉄鉱石x2</small></span>
+                <button class="crafting-btn" onclick="craftItem('伝説の剣')">作成</button>
+            </div>
+            <div class="inv-item">
+                <span>✨ 超回復エリクサー<br><small style="color:#666;">必要: 欠片x2, 薬草x2</small></span>
+                <button class="crafting-btn" onclick="craftItem('超回復エリクサー')">作成</button>
+            </div>
         </div>
     </div>
 
@@ -602,13 +670,18 @@
     </div>
 
     <script>
-        const SAVE_KEY = 'soramame_save_v18';
+        const SAVE_KEY = 'soramame_save_v19';
 
         let gameData = {
             enemiesRemaining: 1000,
             coins: 0,
             rubies: 0,
             magicStones: 0,
+            materials: {
+                "欠片": 0,
+                "鉄鉱石": 0
+            },
+            specialGauge: 0,
             
             level: 1,
             playerHp: 30,
@@ -734,6 +807,10 @@
         const coinCountEl = document.getElementById('coin-count');
         const rubyCountEl = document.getElementById('ruby-count');
         const magicStoneCountEl = document.getElementById('magic-stone-count');
+        const materialFragmentCountEl = document.getElementById('material-fragment-count');
+        const materialOreCountEl = document.getElementById('material-ore-count');
+        const specialGaugeEl = document.getElementById('special-gauge');
+        const specialGaugeTextEl = document.getElementById('special-gauge-text');
         const totalAttackPowerEl = document.getElementById('total-attack-power');
         const upgradeCostEl = document.getElementById('upgrade-cost');
         const playerLevelEl = document.getElementById('player-level');
@@ -784,6 +861,10 @@
                     if (!gameData.consumables) {
                         gameData.consumables = { "薬草": 0, "安物の薬": 0, "一般的な薬": 0, "高級薬": 0, "3000年の歴史の薬": 0, "キャンディソーダ": 0, "凝縮砂糖水": 0, "超回復エリクサー": 0 };
                     }
+                    if (!gameData.materials) {
+                        gameData.materials = { "欠片": 0, "鉄鉱石": 0 };
+                    }
+                    if (gameData.specialGauge === undefined) gameData.specialGauge = 0;
                 } catch(e) {
                     console.log("セーブデータの読み込みに失敗しました");
                 }
@@ -997,10 +1078,24 @@
             playerEvaEl.textContent = gameData.evasion;
             playerLevelEl.textContent = gameData.level;
 
+            // 必殺技ゲージUI更新
+            specialGaugeEl.style.width = gameData.specialGauge + "%";
+            specialGaugeTextEl.textContent = Math.floor(gameData.specialGauge) + "%";
+            const specialBtn = document.getElementById('special-move-btn');
+            if (gameData.specialGauge >= 100) {
+                specialBtn.style.opacity = "1";
+                specialBtn.style.animation = "bossGlow 0.5s ease-in-out infinite alternate";
+            } else {
+                specialBtn.style.opacity = "0.6";
+                specialBtn.style.animation = "none";
+            }
+
             maxDefeatCountEl.textContent = gameData.maxDefeatCount;
             coinCountEl.textContent = gameData.coins;
             rubyCountEl.textContent = gameData.rubies;
             magicStoneCountEl.textContent = gameData.magicStones;
+            materialFragmentCountEl.textContent = gameData.materials["欠片"] || 0;
+            materialOreCountEl.textContent = gameData.materials["鉄鉱石"] || 0;
             totalAttackPowerEl.textContent = calculateTotalAttack();
             upgradeCostEl.textContent = gameData.upgradeCost;
 
@@ -1306,6 +1401,49 @@
             updateScreen();
         };
 
+        // --- クラフト処理 ---
+        window.craftItem = function(recipeName) {
+            if (recipeName === '伝説の剣') {
+                if ((gameData.materials["欠片"] || 0) < 5 || (gameData.materials["鉄鉱石"] || 0) < 2) {
+                    alert("素材が足りません！（必要：欠片x5, 鉄鉱石x2）");
+                    return;
+                }
+                gameData.materials["欠片"] -= 5;
+                gameData.materials["鉄鉱石"] -= 2;
+                gameData.inventory.push({ name: "伝説の剣", type: "sword" });
+                showCritEffect("🔨 伝説の剣を作成した！");
+            } else if (recipeName === '超回復エリクサー') {
+                if ((gameData.materials["欠片"] || 0) < 2 || (gameData.consumables["薬草"] || 0) < 2) {
+                    alert("素材が足りません！（必要：欠片x2, 薬草x2）");
+                    return;
+                }
+                gameData.materials["欠片"] -= 2;
+                gameData.consumables["薬草"] -= 2;
+                gameData.consumables["超回復エリクサー"] = (gameData.consumables["超回復エリクサー"] || 0) + 1;
+                showCritEffect("🔨 超回復エリクサーを作成した！");
+            }
+            saveGame();
+            updateScreen();
+        };
+
+        // --- 必殺技発動処理 ---
+        window.activateSpecialMove = function() {
+            if (gameData.specialGauge < 100) {
+                alert("必殺技ゲージが溜まっていません！ (現在 " + Math.floor(gameData.specialGauge) + "%)");
+                return;
+            }
+            gameData.specialGauge = 0;
+            let dmg = calculateTotalAttack() * 6;
+            gameData.enemyHp -= dmg;
+            showCritEffect(`⚡ 必殺・そらまめ乱舞！ ${dmg}ダメージ！`);
+
+            if (gameData.enemyHp <= 0) {
+                processEnemyDefeat();
+            }
+            saveGame();
+            updateScreen();
+        };
+
         window.adminAddCoins = function() { gameData.coins += 999999999; saveGame(); updateScreen(); };
         window.adminAddRubies = function() { gameData.rubies += 999999999; saveGame(); updateScreen(); };
         window.adminAddStones = function() { gameData.magicStones += 10; saveGame(); updateScreen(); };
@@ -1406,6 +1544,57 @@
             location.reload();
         };
 
+        function processEnemyDefeat() {
+            let coinGain = getCoinReward(gameData.isTrueStageActive ? 0 : gameData.enemiesRemaining);
+            gameData.equippedSkills.forEach((skill) => {
+                if (!skill) return;
+                if (skill.name === "コインフィーバー" && Math.random() < 0.40) coinGain *= 2;
+            });
+
+            gameData.coins += coinGain;
+            
+            const currentEnemy = getCurrentEnemyInfo();
+            const wasBoss = currentEnemy.isBoss;
+
+            if (wasBoss) {
+                gameData.magicStones += 1;
+                gameData.materials["欠片"] = (gameData.materials["欠片"] || 0) + 3;
+                gameData.materials["鉄鉱石"] = (gameData.materials["鉄鉱石"] || 0) + 1;
+            } else {
+                if (Math.random() < 0.007) {
+                    gameData.magicStones += 1;
+                    showCritEffect("🔮 魔法石をゲット！");
+                }
+                if (Math.random() < 0.4) {
+                    gameData.materials["欠片"] = (gameData.materials["欠片"] || 0) + 1;
+                }
+                if (Math.random() < 0.15) {
+                    gameData.materials["鉄鉱石"] = (gameData.materials["鉄鉱石"] || 0) + 1;
+                }
+            }
+
+            if (gameData.isTrueStageActive) {
+                gameData.trueStageProgress += 1;
+            } else {
+                gameData.enemiesRemaining -= 1;
+                gameData.defeatCount += 1;
+            }
+
+            if (currentEnemy.name.includes("ドラゴン") || currentEnemy.name.includes("ヒドラドラゴン") || Math.random() < 0.09) {
+                gameData.rubies += 1;
+            }
+
+            if (wasBoss) rollSkillDrop();
+
+            if (!gameData.isTrueStageActive && gameData.defeatCount > gameData.maxDefeatCount) {
+                gameData.maxDefeatCount = gameData.defeatCount;
+            }
+
+            const nextEnemy = getCurrentEnemyInfo();
+            gameData.enemyMaxHp = nextEnemy.hp;
+            gameData.enemyHp = nextEnemy.hp;
+        }
+
         function performAttack() {
             if (!gameStarted) return;
             if (gameData.isStopped) return;
@@ -1431,45 +1620,11 @@
 
             gameData.enemyHp -= currentAttack;
 
+            // 必殺技ゲージ蓄積 (ダメージに応じて加算、上限100%)
+            gameData.specialGauge = Math.min(100, gameData.specialGauge + Math.max(1, Math.floor(currentAttack / 100)));
+
             if (gameData.enemyHp <= 0) {
-                let coinGain = getCoinReward(gameData.isTrueStageActive ? 0 : gameData.enemiesRemaining);
-                gameData.equippedSkills.forEach((skill) => {
-                    if (!skill) return;
-                    if (skill.name === "コインフィーバー" && Math.random() < 0.40) coinGain *= 2;
-                });
-
-                gameData.coins += coinGain;
-                
-                const currentEnemy = getCurrentEnemyInfo();
-                const wasBoss = currentEnemy.isBoss;
-
-                if (wasBoss) {
-                    gameData.magicStones += 1;
-                } else if (Math.random() < 0.007) {
-                    gameData.magicStones += 1;
-                    showCritEffect("🔮 魔法石をゲット！");
-                }
-
-                if (gameData.isTrueStageActive) {
-                    gameData.trueStageProgress += 1;
-                } else {
-                    gameData.enemiesRemaining -= 1;
-                    gameData.defeatCount += 1;
-                }
-
-                if (currentEnemy.name.includes("ドラゴン") || currentEnemy.name.includes("ヒドラドラゴン") || Math.random() < 0.09) {
-                    gameData.rubies += 1;
-                }
-
-                if (wasBoss) rollSkillDrop();
-
-                if (!gameData.isTrueStageActive && gameData.defeatCount > gameData.maxDefeatCount) {
-                    gameData.maxDefeatCount = gameData.defeatCount;
-                }
-
-                const nextEnemy = getCurrentEnemyInfo();
-                gameData.enemyMaxHp = nextEnemy.hp;
-                gameData.enemyHp = nextEnemy.hp;
+                processEnemyDefeat();
             }
 
             saveGame();
@@ -1489,6 +1644,7 @@
                     showCritEffect("🔥 弱点命中！大ダメージ！");
                 }
                 gameData.enemyHp -= dmg;
+                gameData.specialGauge = Math.min(100, gameData.specialGauge + 5);
                 showCritEffect(`🔥 ファイヤ！ ${dmg}ダメージ`);
             } else if (type === 'ice') {
                 if (gameData.playerMp < 3) { alert("MPが足りません！"); return; }
@@ -1499,35 +1655,19 @@
                     showCritEffect("❄️ 弱点命中！大ダメージ！");
                 }
                 gameData.enemyHp -= dmg;
+                gameData.specialGauge = Math.min(100, gameData.specialGauge + 5);
                 showCritEffect(`❄️ アイス！ ${dmg}ダメージ`);
             } else if (type === 'fan') {
                 if (gameData.playerMp < 5) { alert("MPが足りません！"); return; }
                 gameData.playerMp -= 5;
                 let dmg = 70;
                 gameData.enemyHp -= dmg;
+                gameData.specialGauge = Math.min(100, gameData.specialGauge + 3);
                 showCritEffect(`🌪️ 扇子アタック！ ${dmg}ダメージ`);
             }
 
             if (gameData.enemyHp <= 0) {
-                let coinGain = getCoinReward(gameData.isTrueStageActive ? 0 : gameData.enemiesRemaining);
-                gameData.coins += coinGain;
-                const wasBoss = currentEnemy.isBoss;
-                if (wasBoss) {
-                    gameData.magicStones += 1;
-                    rollSkillDrop();
-                } else if (Math.random() < 0.007) {
-                    gameData.magicStones += 1;
-                }
-
-                if (gameData.isTrueStageActive) {
-                    gameData.trueStageProgress += 1;
-                } else {
-                    gameData.enemiesRemaining -= 1;
-                    gameData.defeatCount += 1;
-                }
-                const nextEnemy = getCurrentEnemyInfo();
-                gameData.enemyMaxHp = nextEnemy.hp;
-                gameData.enemyHp = nextEnemy.hp;
+                processEnemyDefeat();
             }
 
             closeMagicModal();
@@ -1699,7 +1839,7 @@
             gameData.magicStones -= reqStones;
 
             gameData.level += 1;
-            gameData.playerMaxHp += 12; // 最大HPの増加量を12に変更
+            gameData.playerMaxHp += 12;
             gameData.playerMaxMp += 3;
             gameData.attackPower += 2;
             gameData.evasion = Math.min(90, gameData.evasion + 1);
@@ -1736,13 +1876,12 @@
                 "・伝説の剣 (5%): 攻撃力 7倍 (※対ドラゴン2倍！)\n" +
                 "・健康飲料 (15%): 攻撃力 1.5倍\n" +
                 "・エナドリ (5%): 攻撃力 3倍\n\n" +
-                "【 🔮 魔法石について 】\n" +
-                "・通常敵撃破時: 0.7%の確率でドロップ\n" +
-                "・ボス撃破時: 確定ドロップ\n\n" +
-                "【 ✨ 魔法・ショップについて 】\n" +
-                "・レベル3でSHOPが解放されます。\n" +
-                "・ショップのアイテムはルビーで購入できます。\n" +
-                "・魔法は相性があり、弱点を突くと大ダメージ！"
+                "【 🔮 魔法石・素材について 】\n" +
+                "・通常敵撃破時: 0.7%で魔法石、40%で欠片、15%で鉄鉱石ドロップ\n" +
+                "・ボス撃破時: 魔法石・欠片・鉄鉱石が確定で手に入る\n\n" +
+                "【 ✨ 必殺技・クラフトについて 】\n" +
+                "・攻撃や魔法でゲージが溜まり、MAXで強力な必殺技が放てる！\n" +
+                "・クラフト工房で素材を集めて「伝説の剣」などを自作可能！"
             );
         });
 
