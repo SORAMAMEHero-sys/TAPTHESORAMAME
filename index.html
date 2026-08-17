@@ -1050,14 +1050,29 @@
             else if (remaining === 350) base = { name: "【ボス】ダウナー EX", hp: 400000, isBoss: true, atk: 10, eva: 15, element: "fire" };
             else if (remaining === 100) base = { name: "【ボス】終焉の支配者", hp: 1200000, isBoss: true, atk: 15, eva: 20, element: "none" };
             else if (remaining === 50)  base = { name: "【ボス】ラストビュオス", hp: 3500000, isBoss: true, atk: 20, eva: 20, element: "ice" };
-            else if (remaining === 1)   base = { name: "👑【ラスボス】そらまめ", hp: 10000000, isBoss: true, atk: 30, eva: 25, element: "none" };
+            else if (remaining === 1) {
+                if (gameData.clearRounds === 2) {
+                    // 3周目のステージ1000（2.5倍の破壊神）
+                    base = { name: "👌🗿破壊神", hp: Math.floor(10000000 * 2.5), isBoss: true, atk: Math.floor(30 * 2.5), eva: 25, element: "none" };
+                } else {
+                    base = { name: "👑【ラスボス】そらまめ", hp: 10000000, isBoss: true, atk: 30, eva: 25, element: "none" };
+                }
+            }
             else {
                 const index = gameData.defeatCount % normalEnemies.length;
                 const baseEnemy = normalEnemies[index];
                 const multiplier = 1 + (gameData.clearRounds * 0.5);
                 const groupLevel = Math.floor(gameData.defeatCount / 5);
-                const scaledHp = Math.floor((baseEnemy.hp + (groupLevel * 250)) * multiplier);
-                base = { name: baseEnemy.name, hp: scaledHp, icon: baseEnemy.icon, isBoss: false, atk: baseEnemy.atk + Math.floor(groupLevel * 0.5), eva: baseEnemy.eva, element: baseEnemy.element };
+                
+                // ステージ991〜999（残り敵数 9〜1）の特殊判定
+                if (remaining <= 9 && remaining >= 2) {
+                    let scaledHp = Math.floor((baseEnemy.hp + (groupLevel * 250)) * multiplier) * 2;
+                    let scaledAtk = Math.floor(baseEnemy.atk + Math.floor(groupLevel * 0.5)) * 2;
+                    base = { name: "そらまめの戦士⚔️😈🛡", hp: scaledHp, icon: "⚔️", isBoss: false, atk: scaledAtk, eva: baseEnemy.eva, element: baseEnemy.element };
+                } else {
+                    let scaledHp = Math.floor((baseEnemy.hp + (groupLevel * 250)) * multiplier);
+                    base = { name: baseEnemy.name, hp: scaledHp, icon: baseEnemy.icon, isBoss: false, atk: baseEnemy.atk + Math.floor(groupLevel * 0.5), eva: baseEnemy.eva, element: baseEnemy.element };
+                }
             }
             return { ...base, currentHp: base.hp, maxHp: base.hp };
         }
@@ -1584,7 +1599,7 @@
 
         window.adminFreeLevelUp = function() {
             gameData.level += 1;
-            gameData.playerMaxHp += 10;
+            gameData.playerMaxHp += 20;
             gameData.playerHp = gameData.playerMaxHp;
             gameData.playerMaxMp += 3;
             gameData.playerMp = gameData.playerMaxMp;
@@ -2097,8 +2112,8 @@
             gameData.magicStones -= reqStones;
 
             gameData.level += 1;
-            gameData.playerMaxHp += 10;
-            gameData.playerHp += 10;
+            gameData.playerMaxHp += 20;
+            gameData.playerHp += 20;
             gameData.playerMaxMp += 3;
             gameData.playerMp = gameData.playerMaxMp;
             gameData.attackPower += 2;
