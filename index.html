@@ -1699,7 +1699,7 @@
             gameData.magicStones -= reqStones;
 
             gameData.level += 1;
-            gameData.playerMaxHp += 3;
+            gameData.playerMaxHp += 12; // 最大HPの増加量を12に変更
             gameData.playerMaxMp += 3;
             gameData.attackPower += 2;
             gameData.evasion = Math.min(90, gameData.evasion + 1);
