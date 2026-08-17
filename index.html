@@ -36,6 +36,51 @@
             animation: popUpText 0.5s ease-out forwards;
         }
 
+        /* スタート画面用オーバーレイ */
+        #start-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            color: white;
+            font-family: sans-serif;
+            transition: opacity 0.5s;
+        }
+        #start-screen h1 {
+            font-size: 2.2rem;
+            color: #ffcc00;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px #ff5722;
+        }
+        #start-screen p {
+            color: #ccc;
+            font-size: 0.95rem;
+            margin-bottom: 25px;
+        }
+        #game-start-btn {
+            background-color: #ff5722;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 87, 34, 0.7);
+            transition: transform 0.1s, background-color 0.1s;
+        }
+        #game-start-btn:active {
+            transform: scale(0.95);
+            background-color: #e64a19;
+        }
+
         /* 画像ボス用スタイル共通 */
         .boss-img-container {
             width: 80px;
@@ -340,6 +385,17 @@
 </head>
 <body>
 
+    <!-- スタート画面オーバーレイ -->
+    <div id="start-screen">
+        <h1>進め！そらまめ軍団</h1>
+        <p>魔物を討伐して世界を救おう！</p>
+        <button id="game-start-btn">ゲームを開始</button>
+    </div>
+
+    <!-- オーディオ要素 (通常時BGM & ボス戦BGM) -->
+    <audio id="bgm-normal" src="BonDance.mp3" loop preload="auto"></audio>
+    <audio id="bgm-boss" src="Brandishing_Evil.mp3" loop preload="auto"></audio>
+
     <h1>進め！そらまめ軍団</h1>
     <div class="header-area">
         <div class="author">作者: そらまめゲームズ & Gemini</div>
@@ -407,6 +463,7 @@
         <div class="button-row">
             <button class="action-btn" id="exchange-btn" style="background-color: #20c997;">ルビー交換 (🪙<span id="exchange-cost">6</span>)</button>
             <button class="action-btn" id="rate-btn" style="background-color: #17a2b8;">確率一覧</button>
+            <button class="action-btn" id="bgm-toggle-btn" style="background-color: #6f42c1;">🎵 BGM: ON</button>
         </div>
         <div class="button-row">
             <button class="action-btn" id="skip-button" style="background-color: #6c757d; display: none;">CDスキップ (🪙<span id="skip-cost">0</span>)</button>
@@ -489,7 +546,8 @@
             skills: [],
             equippedSkills: [null, null, null],
             buffEndTime: 0,
-            buffMultiplier: 1
+            buffMultiplier: 1,
+            bgmEnabled: true
         };
 
         const GOAL = 1000;
@@ -502,6 +560,15 @@
             { name: "魔物のおおきい鳥", hp: 100, icon: "🦅" },
             { name: "ドラゴン", hp: 250, icon: "🐉" }
         ];
+
+        let gameStarted = false;
+        const bgmNormal = document.getElementById('bgm-normal');
+        const bgmBoss = document.getElementById('bgm-boss');
+
+        function stopAllBgm() {
+            bgmNormal.pause();
+            bgmBoss.pause();
+        }
 
         const enemyNameEl = document.getElementById('enemy-name');
         const hpBarEl = document.getElementById('hp-bar');
@@ -517,6 +584,7 @@
         const upgradeButton = document.getElementById('upgrade-button');
         const exchangeBtn = document.getElementById('exchange-btn');
         const rateBtn = document.getElementById('rate-btn');
+        const bgmToggleBtn = document.getElementById('bgm-toggle-btn');
         const restartButton = document.getElementById('restart-button');
         const skipButton = document.getElementById('skip-button');
         const skipCostEl = document.getElementById('skip-cost');
@@ -531,6 +599,8 @@
         const danvilleImgContainer = document.getElementById('danville-img-container');
         const bossAvatarEl = document.getElementById('boss-avatar');
         const normalIconEl = document.getElementById('normal-icon');
+        const startScreenEl = document.getElementById('start-screen');
+        const gameStartBtn = document.getElementById('game-start-btn');
         const body = document.body;
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -676,6 +746,7 @@
 
         function updateScreen() {
             if (gameData.enemiesRemaining <= 0) {
+                stopAllBgm();
                 body.innerHTML = `
                     <div class="clear-container">
                         <h1>🎉 クリア！ 🎉</h1>
@@ -689,7 +760,6 @@
             const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
             enemyNameEl.textContent = `${currentEnemy.name} を攻撃！`;
 
-            // 見た目の切り替え（ダウナー画像、ダンビル画像、その他のボス、通常敵）
             if (currentEnemy.isDowner) {
                 downerImgContainer.classList.add('show');
                 danvilleImgContainer.classList.remove('show');
@@ -732,6 +802,24 @@
 
             const exchangeCost = gameData.attackPower * 6;
             exchangeCostEl.textContent = exchangeCost;
+
+            bgmToggleBtn.textContent = gameData.bgmEnabled ? "🎵 BGM: ON" : "🔇 BGM: OFF";
+            
+            if (gameData.bgmEnabled && gameStarted) {
+                if (currentEnemy.isBoss) {
+                    bgmNormal.pause();
+                    if (bgmBoss.paused) {
+                        bgmBoss.play().catch(e => {});
+                    }
+                } else {
+                    bgmBoss.pause();
+                    if (bgmNormal.paused) {
+                        bgmNormal.play().catch(e => {});
+                    }
+                }
+            } else {
+                stopAllBgm();
+            }
 
             if (Date.now() < gameData.buffEndTime) {
                 const leftSec = Math.ceil((gameData.buffEndTime - Date.now()) / 1000);
@@ -997,6 +1085,8 @@
         }
 
         function performAttack() {
+            if (!gameStarted) return;
+
             if (!gameData.enemyHp) {
                 const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
                 gameData.enemyMaxHp = currentEnemy.hp;
@@ -1058,12 +1148,12 @@
 
         attackButton.addEventListener('click', performAttack);
 
-        setInterval(() => performAttack(), 2000);
+        setInterval(() => { if (gameStarted) performAttack(); }, 2000);
         setInterval(() => {
-            if (gameData.equippedSkills.some(s => s && s.name === "タレット")) performAttack();
+            if (gameStarted && gameData.equippedSkills.some(s => s && s.name === "タレット")) performAttack();
         }, 3000);
         setInterval(() => {
-            if (gameData.equippedSkills.some(s => s && s.name === "新型タレット")) performAttack();
+            if (gameStarted && gameData.equippedSkills.some(s => s && s.name === "新型タレット")) performAttack();
         }, 1000);
 
         upgradeButton.addEventListener('click', () => {
@@ -1090,6 +1180,12 @@
             } else {
                 alert("コインが足りません！");
             }
+        });
+
+        bgmToggleBtn.addEventListener('click', () => {
+            gameData.bgmEnabled = !gameData.bgmEnabled;
+            saveGame();
+            updateScreen();
         });
 
         rateBtn.addEventListener('click', () => {
@@ -1145,6 +1241,18 @@
 
         gacha1Btn.addEventListener('click', () => rollGacha(1));
         gacha10Btn.addEventListener('click', () => rollGacha(10));
+
+        gameStartBtn.addEventListener('click', () => {
+            gameStarted = true;
+            startScreenEl.style.opacity = '0';
+            setTimeout(() => {
+                startScreenEl.style.display = 'none';
+            }, 500);
+
+            if (gameData.bgmEnabled) {
+                updateScreen();
+            }
+        });
 
         loadGame();
         const currentEnemy = getCurrentEnemyInfo(gameData.enemiesRemaining);
