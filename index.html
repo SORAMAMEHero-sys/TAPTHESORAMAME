@@ -2249,6 +2249,26 @@
             bgmNormal.play().then(() => { bgmNormal.pause(); bgmNormal.currentTime = 0; }).catch(e => {});
             bgmBoss.play().then(() => { bgmBoss.pause(); bgmBoss.currentTime = 0; }).catch(e => {});
             bgmSoramame.play().then(() => { bgmSoramame.pause(); bgmSoramame.currentTime = 0; }).catch(e => {});
+            // 💎 3分ごとにルビー1個
+const RUBY_INTERVAL = 3 * 60 * 1000;
+let lastRubyTime = Date.now();
+
+setInterval(() => {
+    if (!gameStarted || gameData.isStopped) return;
+
+    const now = Date.now();
+
+    if (now - lastRubyTime >= RUBY_INTERVAL) {
+        const rubyCount = Math.floor((now - lastRubyTime) / RUBY_INTERVAL);
+
+        gameData.rubies += rubyCount;
+        lastRubyTime += rubyCount * RUBY_INTERVAL;
+
+        showCritEffect(`💎 ルビー +${rubyCount}！`);
+        saveGame();
+        updateScreen();
+    }
+}, 1000);
 
             if (gameData.bgmEnabled) updateScreen();
         });
